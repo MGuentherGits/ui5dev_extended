@@ -1,16 +1,21 @@
-const path = require('path');
-const fs = require('fs');
+import path from 'path';
+import fs from 'fs';
 
-const rollup = require('rollup');
-const babel = require('rollup-plugin-babel');
-const outputFileSync = require('output-file-sync');
-const chalk = require('chalk');
+import * as rollup from 'rollup';
+import babel from 'rollup-plugin-babel';
+import outputFileSync from 'output-file-sync';
+import chalk from 'chalk';
 
-const log = require('../utils').log;
+import { log } from '../utils';
 
 const babelrc = {
   presets: [
-    ['env', {targets: {browsers: ['last 2 versions', 'ie >= 11']}, modules: false}]
+    ['env', {
+      targets: {
+        browsers: ['last 2 versions', 'ie >= 11']
+      },
+      modules: false
+    }]
   ]
 };
 
@@ -62,7 +67,7 @@ function copyFile(src, dest, filename) {
 }
 
 
-module.exports = function build(src, dest, options = {}) {
+function build(src, dest, options = {}) {
   const filelist = walkSync(src)
     .map(filename => path.relative(src, filename));
 
@@ -77,3 +82,5 @@ module.exports = function build(src, dest, options = {}) {
     });
   }
 }
+
+export default build;

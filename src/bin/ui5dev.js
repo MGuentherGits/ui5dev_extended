@@ -1,14 +1,13 @@
 #! /usr/bin/env node
-const path = require('path');
-const version = require('../package.json').version;
-const program = require('commander');
+import path from 'path';
+import program from 'commander';
 
-const clean = require('../commands/clean');
-const build = require('../commands/build');
+import clean from '../commands/clean';
+import build from '../commands/build';
 
+const version = require('../../package.json').version;
 const src = path.join(process.cwd(), 'webapp');
 const dest = path.join(process.cwd(), 'dist');
-
 
 program
   .command('clean')
@@ -37,4 +36,4 @@ program
   });
   
 
-program.parse(process.argv);
+program.version(version).parse(process.argv);

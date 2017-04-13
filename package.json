@@ -3,9 +3,11 @@
   "version": "0.0.1",
   "description": "UI5 apps dev tool",
   "bin": {
-    "ui5dev": "bin/ui5dev.js"
+    "ui5dev": "dist/bin/ui5dev.js"
   },
   "scripts": {
+    "build": "babel src -d dist", 
+    "build-watch": "npm run build -- --watch",
     "test": "echo \"Error: no test specified\""
   },
   "author": "",
@@ -20,5 +22,15 @@
     "rimraf": "^2.6.1",
     "rollup": "^0.41.6",
     "rollup-plugin-babel": "^2.7.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1"
+  },
+  "babel": {
+    "presets": [
+      ["env", {
+        "targets": {"node": 6.5}
+      }]
+    ]
   }
 }

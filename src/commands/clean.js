@@ -1,9 +1,10 @@
-const path = require('path');
-const rimraf = require('rimraf');
-const chalk = require('chalk');
-const log = require('../utils').log;
+import path from 'path';
+import rimraf from 'rimraf';
+import chalk from 'chalk';
+import { log } from '../utils';
 
-module.exports = function clean(dest) {
+
+function clean(dest) {
   return new Promise(function(resolve) {
     const dirname = path.relative(process.cwd(), dest);
     rimraf(dest, function() {
@@ -12,3 +13,5 @@ module.exports = function clean(dest) {
     });
   });
 };
+
+export default clean;
