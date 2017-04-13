@@ -4,6 +4,10 @@ import program from 'commander';
 
 import clean from '../commands/clean';
 import build from '../commands/build';
+import serve from '../commands/serve';
+
+import { generatePortNumber } from '../utils';
+
 
 const version = require('../../package.json').version;
 const src = path.join(process.cwd(), 'webapp');
@@ -21,6 +25,13 @@ program
     clean(dest).then(() => {
       build(src, dest, {watch: true});
     });
+  });
+
+program
+  .command('serve')
+  .action(function() {
+    const port = generatePortNumber();
+    serve(dest, port);
   });
 
 program
