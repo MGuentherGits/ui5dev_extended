@@ -10,13 +10,14 @@ import { log } from '../utils';
 
 const babelrc = {
   presets: [
-    ['env', {
+    [require.resolve('babel-preset-env'), {
       targets: {
         browsers: ['last 2 versions', 'ie >= 11']
       },
       modules: false
     }]
-  ]
+  ],
+  babelrc: false
 };
 
 function walkSync(dir, filelist) {
@@ -77,7 +78,9 @@ function build(src, dest, options = {}) {
     const watcher = require('chokidar').watch(src, {recursive: true, ignoreInitial: true});
     ['add', 'change'].forEach(eventType => {
       watcher.on(eventType, filename => {
-        handleFile(src, dest, path.relative(src, filename));
+        setTimeout(function() {
+          handleFile(src, dest, path.relative(src, filename));
+        }, 100);
       });
     });
   }
