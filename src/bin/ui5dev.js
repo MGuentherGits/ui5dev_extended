@@ -33,7 +33,7 @@ program
   });
 
 program
-  .command('devserver')
+  .command('start')
   .action(function(args, next) {
     clean(dest).then(() => {
       build(src, dest, {watch: true});
@@ -46,6 +46,6 @@ program
   .action(function() {
     console.log('Deploy', arguments);
   });
-  
+
 
 program.version(version).parse(process.argv);
