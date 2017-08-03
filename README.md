@@ -2,7 +2,7 @@
 
 Develop UI5 applications using ES6 syntax and in any code editor you want. You can start from scratch or export a project from SAP WebIde.
 
-![alt tag](screenshot.png?raw=true)
+![alt tag](https://bytebucket.org/zftrw-sap/ui5dev/raw/d70ee1c02e8749ec3c12f198c40b2d40db864718/screenshot.png?raw=true)
 
 
 ## Installation
