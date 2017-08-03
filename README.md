@@ -47,7 +47,7 @@ YourUI5App
 │       └── App.view.html
 ├── neo-app.json
 └── config.json
- ```
+```
 
 
 ## Configuration
@@ -90,7 +90,7 @@ No configuration file is needed to start webserver, but if you need proxy (desti
 
 You can write your JavaScript files using ES6 syntax. All files will be transpiled using Babel and put in `dist` directory. Babel is using `babel-preset-env` and targeting IE11 and above.
 
-But please note that SAP WebIde does not support Babel transpilation so if you also want to be able to edit your code in SAP WebIde just use plain ES5 syntax.
+But please note that SAP WebIde does not support Babel transpilation so if you want to be able to edit your code in SAP WebIde as well, then just use plain ES5 syntax.
 
 
 ## Deployment
