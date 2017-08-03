@@ -1,12 +1,17 @@
 {
   "name": "ui5dev",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "UI5 apps development server",
   "homepage": "https://bitbucket.org/zftrw-sap/ui5dev",
   "repository": {
     "type": "git",
     "url": "git@bitbucket.org:zftrw-sap/ui5dev.git"
   },
+  "keywords": [
+    "openui5",
+    "sapui5",
+    "sap"
+  ],
   "bin": {
     "ui5dev": "dist/bin/ui5dev.js"
   },
