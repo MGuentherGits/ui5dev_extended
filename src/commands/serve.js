@@ -6,8 +6,7 @@ import morgan from 'morgan';
 import chalk from 'chalk';
 import proxy from 'express-http-proxy';
 import saplogon from 'saplogon-read';
-import opn from 'opn';
-import { log, generatePortNumber } from '../utils';
+import { log, generatePortNumber, getHostName } from '../utils';
 
 
 function getDestinations(dest) {
@@ -61,8 +60,8 @@ function getDestinations(dest) {
 
 function serve(dest) {
   const app = express();
-  const port = generatePortNumber();
   const destinations = getDestinations(dest);
+  const port = generatePortNumber();
 
   app.use(morgan('short'));
   app.use(express.static(dest));
@@ -75,8 +74,7 @@ function serve(dest) {
   });
 
   const server = app.listen(port, '0.0.0.0', function() {
-    const host = `http://127.0.0.1:${server.address().port}`;
-    opn(host);
+    const host = getHostName(port);
 
     log(`Development server listening on ${chalk.yellow.underline(host)}`);
     if (destinations.length > 0) {

@@ -5,6 +5,7 @@ import program from 'commander';
 import clean from '../commands/clean';
 import build from '../commands/build';
 import serve from '../commands/serve';
+import open from '../commands/open';
 
 
 const version = require('../../package.json').version;
@@ -28,24 +29,42 @@ program
 
 program
   .command('serve')
-  .action(function() {
+  .option('-b, --open-browser [path]', 'Open browser')
+  .action(function(options) {
     serve(dest);
+    if (options.openBrowser) {
+      open(options.openBrowser);
+    }
   });
 
 program
   .command('start')
-  .action(function(args, next) {
+  .option('-b, --open-browser [path]', 'Open browser')
+  .action(function(options) {
     clean(dest).then(() => {
       build(src, dest, {watch: true});
       serve(dest);
+      if (options.openBrowser) {
+        open(options.openBrowser);
+      }
     });
+  });
+
+program
+  .command('open [path]')
+  .action(function(path) {
+    open(path);
   });
 
 program
   .command('deploy')
   .action(function() {
-    console.log('Deploy', arguments);
+    console.log('Deployment is not implemented yet! :(');
   });
 
 
 program.version(version).parse(process.argv);
+
+if (!process.argv.slice(2).length) {
+  program.outputHelp();
+}

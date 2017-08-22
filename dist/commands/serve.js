@@ -36,10 +36,6 @@ var _saplogonRead = require('saplogon-read');
 
 var _saplogonRead2 = _interopRequireDefault(_saplogonRead);
 
-var _opn = require('opn');
-
-var _opn2 = _interopRequireDefault(_opn);
-
 var _utils = require('../utils');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -94,8 +90,8 @@ function getDestinations(dest) {
 
 function serve(dest) {
   const app = (0, _express2.default)();
-  const port = (0, _utils.generatePortNumber)();
   const destinations = getDestinations(dest);
+  const port = (0, _utils.generatePortNumber)();
 
   app.use((0, _morgan2.default)('short'));
   app.use(_express2.default.static(dest));
@@ -108,8 +104,7 @@ function serve(dest) {
   });
 
   const server = app.listen(port, '0.0.0.0', function () {
-    const host = `http://127.0.0.1:${server.address().port}`;
-    (0, _opn2.default)(host);
+    const host = (0, _utils.getHostName)(port);
 
     (0, _utils.log)(`Development server listening on ${_chalk2.default.yellow.underline(host)}`);
     if (destinations.length > 0) {
