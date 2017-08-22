@@ -8,12 +8,10 @@ var _opn = require('opn');
 
 var _opn2 = _interopRequireDefault(_opn);
 
-var _utils = require('../utils');
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function open(path) {
-  let url = (0, _utils.getHostName)((0, _utils.generatePortNumber)());
+function open(path, port) {
+  let url = `http://127.0.0.1:${port}/`;
   if (typeof path === 'string') {
     url += path;
   }

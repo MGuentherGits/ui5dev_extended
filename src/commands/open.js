@@ -1,9 +1,8 @@
 import opn from 'opn';
-import { generatePortNumber, getHostName } from '../utils';
 
 
-function open(path) {
-  let url = getHostName(generatePortNumber());
+function open(path, port) {
+  let url = `http://127.0.0.1:${port}/`;
   if (typeof path === 'string') {
     url += path;
   }

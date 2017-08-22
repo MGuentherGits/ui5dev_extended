@@ -57,7 +57,7 @@ YourUI5App
 
 ## Configuration
 
-No configuration file is needed to start webserver, but if you need proxy (destinations) you can use `neo-app.json` configration from SAP Web IDE or provide `config.js` file which is a bit simpler to write. You can use both in one project. Only the routing part is already used.
+No configuration file is needed to start webserver, but if you need proxy (destinations) you can use `neo-app.json` configration from SAP Web IDE or provide `config.js` file which is a bit simpler to write. You can use both in one project.
 
 `neo-app.json`
 ```json
@@ -84,7 +84,11 @@ No configuration file is needed to start webserver, but if you need proxy (desti
       "path": "/sap/opu/odata",
       "system": "BD0"
     }    
-  ]
+  ],
+
+  "sourceFolder": "webapp",
+  "targetFolder": "dist",
+  "port": 3111
 }
 ```
 

@@ -7,11 +7,15 @@ import build from '../commands/build';
 import serve from '../commands/serve';
 import open from '../commands/open';
 
+import { log, readConfig, validateSrc } from '../utils';
 
+
+const config = readConfig();
 const version = require('../../package.json').version;
 const cwd = process.cwd();
-const src = path.join(cwd, 'webapp');
-const dest = path.join(cwd, 'dist');
+const src = path.join(cwd, config.sourceFolder);
+const dest = path.join(cwd, config.targetFolder);
+
 
 program
   .command('clean')
@@ -22,18 +26,20 @@ program
 program
   .command('build')
   .action(function() {
-    clean(dest).then(() => {
-      build(src, dest, {watch: false});
-    });
+    if (validateSrc(src, config.sourceFolder)) {
+      clean(dest).then(() => {
+        build(src, dest, {watch: false});
+      });
+    }
   });
 
 program
   .command('serve')
   .option('-b, --open-browser [path]', 'Open browser')
   .action(function(options) {
-    serve(dest);
+    serve(dest, config.port, config.destinations);
     if (options.openBrowser) {
-      open(options.openBrowser);
+      open(options.openBrowser, config.port);
     }
   });
 
@@ -41,25 +47,27 @@ program
   .command('start')
   .option('-b, --open-browser [path]', 'Open browser')
   .action(function(options) {
-    clean(dest).then(() => {
-      build(src, dest, {watch: true});
-      serve(dest);
-      if (options.openBrowser) {
-        open(options.openBrowser);
-      }
-    });
+    if (validateSrc(src, config.sourceFolder)) {
+      clean(dest).then(() => {
+        build(src, dest, {watch: true});
+        serve(dest, config.port, config.destinations);
+        if (options.openBrowser) {
+          open(options.openBrowser, config.port);
+        }
+      });
+    }
   });
 
 program
   .command('open [path]')
   .action(function(path) {
-    open(path);
+    open(path, config.port);
   });
 
 program
   .command('deploy')
   .action(function() {
-    console.log('Deployment is not implemented yet! :(');
+    log('Deployment is not implemented yet! :(');
   });
 
 

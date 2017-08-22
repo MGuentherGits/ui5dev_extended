@@ -25,46 +25,53 @@ var _open = require('../commands/open');
 
 var _open2 = _interopRequireDefault(_open);
 
+var _utils = require('../utils');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+const config = (0, _utils.readConfig)();
 const version = require('../../package.json').version;
 const cwd = process.cwd();
-const src = _path2.default.join(cwd, 'webapp');
-const dest = _path2.default.join(cwd, 'dist');
+const src = _path2.default.join(cwd, config.sourceFolder);
+const dest = _path2.default.join(cwd, config.targetFolder);
 
 _commander2.default.command('clean').action(function () {
   (0, _clean2.default)(dest);
 });
 
 _commander2.default.command('build').action(function () {
-  (0, _clean2.default)(dest).then(() => {
-    (0, _build2.default)(src, dest, { watch: false });
-  });
+  if ((0, _utils.validateSrc)(src, config.sourceFolder)) {
+    (0, _clean2.default)(dest).then(() => {
+      (0, _build2.default)(src, dest, { watch: false });
+    });
+  }
 });
 
 _commander2.default.command('serve').option('-b, --open-browser [path]', 'Open browser').action(function (options) {
-  (0, _serve2.default)(dest);
+  (0, _serve2.default)(dest, config.port, config.destinations);
   if (options.openBrowser) {
-    (0, _open2.default)(options.openBrowser);
+    (0, _open2.default)(options.openBrowser, config.port);
   }
 });
 
 _commander2.default.command('start').option('-b, --open-browser [path]', 'Open browser').action(function (options) {
-  (0, _clean2.default)(dest).then(() => {
-    (0, _build2.default)(src, dest, { watch: true });
-    (0, _serve2.default)(dest);
-    if (options.openBrowser) {
-      (0, _open2.default)(options.openBrowser);
-    }
-  });
+  if ((0, _utils.validateSrc)(src, config.sourceFolder)) {
+    (0, _clean2.default)(dest).then(() => {
+      (0, _build2.default)(src, dest, { watch: true });
+      (0, _serve2.default)(dest, config.port, config.destinations);
+      if (options.openBrowser) {
+        (0, _open2.default)(options.openBrowser, config.port);
+      }
+    });
+  }
 });
 
 _commander2.default.command('open [path]').action(function (path) {
-  (0, _open2.default)(path);
+  (0, _open2.default)(path, config.port);
 });
 
 _commander2.default.command('deploy').action(function () {
-  console.log('Deployment is not implemented yet! :(');
+  (0, _utils.log)('Deployment is not implemented yet! :(');
 });
 
 _commander2.default.version(version).parse(process.argv);
