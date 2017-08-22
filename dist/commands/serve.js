@@ -42,12 +42,15 @@ function serve(dest, port, destinations) {
   });
 
   const server = app.listen(port, '0.0.0.0', function () {
-    const host = `http://127.0.0.1:${port}/`;
-    (0, _utils.log)(`Development server listening on ${_chalk2.default.yellow.underline(host)}`);
+    (0, _utils.log)(`Development server listening on:`);
+    (0, _utils.getAvailableIPAddresses)().forEach(ip => {
+      (0, _utils.log)(_chalk2.default.yellow.underline(`http://${ip}:${port}/`));
+    });
 
     if (destinations.length > 0) {
+      (0, _utils.log)('Destinations:');
       destinations.forEach(destination => {
-        (0, _utils.log)(`destination: ${_chalk2.default.yellow(destination.path)} => ${_chalk2.default.cyan(destination.host)} (${destination.system})`);
+        (0, _utils.log)(`${_chalk2.default.yellow(destination.path)} => ${_chalk2.default.cyan(destination.host)} (${destination.system})`);
       });
     } else {
       (0, _utils.log)(`No external destinations loaded.`);

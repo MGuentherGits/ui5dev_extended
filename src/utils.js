@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import chalk from 'chalk';
 import saplogon from 'saplogon-read';
 
@@ -13,6 +14,15 @@ export function validateSrc(src, sourceFolder) {
   }
   log(chalk.red(`Error: Missing \`${sourceFolder}\` folder. Are you in a correct directory?`));
   return false;
+}
+
+
+export function getAvailableIPAddresses() {
+  const ifaces = os.networkInterfaces();
+  return Object.values(ifaces)
+               .reduce(function(arr, entry) { return arr.concat(entry); }, [])
+               .filter(entry => entry.family === 'IPv4')
+               .map(entry => entry.address);
 }
 
 

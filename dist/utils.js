@@ -5,6 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.log = undefined;
 exports.validateSrc = validateSrc;
+exports.getAvailableIPAddresses = getAvailableIPAddresses;
 exports.readConfig = readConfig;
 
 var _path = require('path');
@@ -14,6 +15,10 @@ var _path2 = _interopRequireDefault(_path);
 var _fs = require('fs');
 
 var _fs2 = _interopRequireDefault(_fs);
+
+var _os = require('os');
+
+var _os2 = _interopRequireDefault(_os);
 
 var _chalk = require('chalk');
 
@@ -33,6 +38,13 @@ function validateSrc(src, sourceFolder) {
   }
   log(_chalk2.default.red(`Error: Missing \`${sourceFolder}\` folder. Are you in a correct directory?`));
   return false;
+}
+
+function getAvailableIPAddresses() {
+  const ifaces = _os2.default.networkInterfaces();
+  return Object.values(ifaces).reduce(function (arr, entry) {
+    return arr.concat(entry);
+  }, []).filter(entry => entry.family === 'IPv4').map(entry => entry.address);
 }
 
 function readConfig() {
