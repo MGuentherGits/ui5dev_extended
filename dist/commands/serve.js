@@ -39,8 +39,9 @@ function serve(dest, port, destinations) {
   app.use(_express2.default.static(dest));
 
   destinations.forEach(function (destination) {
-    app.use(destination.path, (0, _expressHttpProxy2.default)(destination.host, {
-      proxyReqPathResolver: req => destination.path + _url2.default.parse(req.url).path,
+    const { host, hostSufix } = (0, _utils.splitHost)(destination.targetHost);
+    app.use(destination.path, (0, _expressHttpProxy2.default)(host, {
+      proxyReqPathResolver: req => hostSufix + destination.path + _url2.default.parse(req.url).path,
       https: destination.https
     }));
   });
@@ -61,7 +62,12 @@ function serve(dest, port, destinations) {
     if (destinations.length > 0) {
       (0, _utils.log)('Loaded destinations:');
       destinations.forEach(destination => {
-        (0, _utils.log)(`> ${_chalk2.default.yellow(destination.path)} => ${_chalk2.default.cyan(destination.host)} (${destination.targetSystem})`);
+        const protocol = destination.https ? 'https://' : 'http://';
+        let logMsg = `> ${_chalk2.default.yellow(destination.path)} => ${_chalk2.default.yellow(protocol)}${_chalk2.default.cyan(destination.targetHost)}${_chalk2.default.yellow(destination.path)}`;
+        if (destination.targetSystem) {
+          logMsg += ` (${destination.targetSystem})`;
+        }
+        (0, _utils.log)(logMsg);
       });
     } else {
       (0, _utils.log)(`No external destinations loaded.`);

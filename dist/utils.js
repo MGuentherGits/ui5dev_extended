@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.log = undefined;
 exports.validateBuild = validateBuild;
 exports.getAvailableIPAddresses = getAvailableIPAddresses;
+exports.splitHost = splitHost;
 exports.readConfig = readConfig;
 exports.isSameDirectory = isSameDirectory;
 
@@ -54,6 +55,16 @@ function getAvailableIPAddresses() {
   }, []).filter(entry => entry.family === 'IPv4').map(entry => entry.address);
 }
 
+function splitHost(host) {
+  let hostSufix = '';
+  const slashPos = host.indexOf('/');
+  if (slashPos > 0) {
+    hostSufix = host.substr(slashPos);
+    host = host.substr(0, slashPos);
+  }
+  return { host, hostSufix };
+}
+
 function readConfig() {
   const cfg = {
     sourceFolder: '',
@@ -89,12 +100,23 @@ function readConfig() {
     if (_fs2.default.existsSync(configFile)) {
       const config = require(configFile);
       let routes = config.routes || [];
-      routes = routes.filter(r => r.target.type === 'destination').map(route => {
-        return {
-          path: route.path,
-          targetSystem: route.target.name
+      routes = routes.map(route => {
+        const rv = {
+          path: route.path
         };
+
+        if (route.target.type === 'destination') {
+          rv.targetSystem = route.target.name;
+        } else if (route.target.type === 'service' && route.target.name === 'sapui5') {
+          rv.targetHost = 'sapui5.hana.ondemand.com';
+          if (route.target.serviceVersion) {
+            rv.targetHost += '/' + route.target.serviceVersion;
+          }
+          rv.https = true;
+        }
+        return rv;
       });
+
       destinations = destinations.concat(routes);
     }
   } catch (ex) {
@@ -121,16 +143,23 @@ function readConfig() {
   }
 
   destinations = destinations.map(function (route) {
-    const logon = (0, _saplogonRead2.default)(route.targetSystem);
-    if (!logon) {
-      log(_chalk2.default.red(`Error: Unknown system ${_chalk2.default.cyan(route.targetSystem || '')} for ${_chalk2.default.yellow(route.path)}`));
+    if (route.targetSystem) {
+      const logon = (0, _saplogonRead2.default)(route.targetSystem);
+      if (!logon) {
+        log(_chalk2.default.red(`Error: Unknown system ${_chalk2.default.cyan(route.targetSystem || '')} for ${_chalk2.default.yellow(route.path)}`));
+        return null;
+      }
+      route.targetHost = logon.host;
+    }
+    if (!route.targetHost) {
+      log(_chalk2.default.red(`Error: No target host for ${_chalk2.default.yellow(route.path)}`));
       return null;
     }
     return {
       targetSystem: route.targetSystem,
+      targetHost: route.targetHost,
       path: route.path,
-      host: logon.host,
-      https: false
+      https: route.https || false
     };
   });
   cfg.destinations = destinations.filter(destination => destination !== null);

@@ -88,8 +88,13 @@ Destinations in `ui5dev` work very similar to that from SAP Web IDE - they allow
   "destinations": [
     {
       "path": "/sap/opu/odata",
-      "targetSystem": "BD0"  /* SID of a system from SAP Logon */
+      "targetSystem": "BD0" /* SID of a system from SAP Logon */
     }    
+    {
+      "path": "/resources",
+      "targetHost": "sapui5.hana.ondemand.com", /* or: sapui5.hana.ondemand.com/1.28.9 */
+      "https": true
+    }
   ]
 }
 ```
@@ -104,11 +109,21 @@ You can also use `routes` part from `neo-app.json`.
       "path": "/sap/opu/odata",
       "target": {
         "type": "destination",
-        "name": "BD0",  /* SID of a system from SAP Logon */
+        "name": "BD0", /* SID of a system from SAP Logon */
         "entryPath": "/sap/opu/odata"
       },
       "description": "BD0 Development System"
-    }    
+    },    
+    {
+      "path": "/resources",
+      "target": {
+        "type": "service",
+        "serviceVersion": "1.32.18", /* add this for specific SAPUI5 version */
+        "name": "sapui5",
+        "entryPath": "/resources"
+      },
+      "description": "SAPUI5 Resources"
+    }
   ]
 }
 ```

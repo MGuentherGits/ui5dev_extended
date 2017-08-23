@@ -32,6 +32,17 @@ export function getAvailableIPAddresses() {
 }
 
 
+export function splitHost(host) {
+  let hostSufix = '';
+  const slashPos = host.indexOf('/');
+  if (slashPos > 0) {
+    hostSufix = host.substr(slashPos);
+    host = host.substr(0, slashPos);
+  }
+  return { host, hostSufix };
+}
+
+
 export function readConfig() {
   const cfg = {
     sourceFolder: '',
@@ -67,12 +78,23 @@ export function readConfig() {
     if (fs.existsSync(configFile)) {
       const config = require(configFile);
       let routes = config.routes || [];
-      routes = routes.filter(r => r.target.type === 'destination').map(route => {
-        return {
-          path: route.path,
-          targetSystem: route.target.name
+      routes = routes.map(route => {
+        const rv = {
+          path: route.path
+        };
+
+        if (route.target.type === 'destination') {
+          rv.targetSystem = route.target.name;
+        } else if (route.target.type === 'service' && route.target.name === 'sapui5') {
+          rv.targetHost = 'sapui5.hana.ondemand.com';
+          if (route.target.serviceVersion) {
+            rv.targetHost += '/' + route.target.serviceVersion;
+          }
+          rv.https = true;
         }
+        return rv;
       });
+
       destinations = destinations.concat(routes);
     }
   } catch (ex) {
@@ -99,16 +121,23 @@ export function readConfig() {
   }
 
   destinations = destinations.map(function(route) {
-    const logon = saplogon(route.targetSystem);
-    if (!logon) {
-      log(chalk.red(`Error: Unknown system ${chalk.cyan(route.targetSystem || '')} for ${chalk.yellow(route.path)}`));
+    if (route.targetSystem) {
+      const logon = saplogon(route.targetSystem);
+      if (!logon) {
+        log(chalk.red(`Error: Unknown system ${chalk.cyan(route.targetSystem || '')} for ${chalk.yellow(route.path)}`));
+        return null;
+      }
+      route.targetHost = logon.host;
+    }
+    if (!route.targetHost) {
+      log(chalk.red(`Error: No target host for ${chalk.yellow(route.path)}`));
       return null;
     }
     return {
       targetSystem: route.targetSystem,
+      targetHost: route.targetHost,
       path: route.path,
-      host: logon.host,
-      https: false,
+      https: route.https || false,
     };
   });
   cfg.destinations = destinations.filter(destination => destination !== null);

@@ -4,7 +4,7 @@ import express from 'express';
 import morgan from 'morgan';
 import chalk from 'chalk';
 import proxy from 'express-http-proxy';
-import { log, getAvailableIPAddresses } from '../utils';
+import { log, getAvailableIPAddresses, splitHost } from '../utils';
 
 
 function serve(dest, port, destinations) {
@@ -14,8 +14,9 @@ function serve(dest, port, destinations) {
   app.use(express.static(dest));
 
   destinations.forEach(function(destination) {
-    app.use(destination.path, proxy(destination.host, {
-      proxyReqPathResolver: req => destination.path + url.parse(req.url).path,
+    const { host, hostSufix } = splitHost(destination.targetHost);
+    app.use(destination.path, proxy(host, {
+      proxyReqPathResolver: req => hostSufix + destination.path + url.parse(req.url).path,
       https: destination.https,
     }));
   });
@@ -36,7 +37,12 @@ function serve(dest, port, destinations) {
     if (destinations.length > 0) {
       log('Loaded destinations:');
       destinations.forEach(destination => {
-        log(`> ${chalk.yellow(destination.path)} => ${chalk.cyan(destination.host)} (${destination.targetSystem})`);
+        const protocol = destination.https ? 'https://' : 'http://';
+        let logMsg = `> ${chalk.yellow(destination.path)} => ${chalk.yellow(protocol)}${chalk.cyan(destination.targetHost)}${chalk.yellow(destination.path)}`;
+        if (destination.targetSystem) {
+          logMsg += ` (${destination.targetSystem})`;
+        }
+        log(logMsg);
       });
     } else {
       log(`No external destinations loaded.`);
