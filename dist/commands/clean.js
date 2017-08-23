@@ -8,6 +8,10 @@ var _path = require('path');
 
 var _path2 = _interopRequireDefault(_path);
 
+var _fs = require('fs');
+
+var _fs2 = _interopRequireDefault(_fs);
+
 var _rimraf = require('rimraf');
 
 var _rimraf2 = _interopRequireDefault(_rimraf);
@@ -23,10 +27,20 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function clean(dest) {
   return new Promise(function (resolve) {
     const dirname = _path2.default.relative(process.cwd(), dest);
-    (0, _rimraf2.default)(dest, function () {
-      (0, _utils.log)(`deleting directory ${_chalk2.default.red(dirname)}`);
+    if (dirname === '' || dirname.startsWith('.')) {
+      (0, _utils.log)(_chalk2.default.red('Error. No target folder specified for the project.'));
       resolve();
-    });
+      return;
+    }
+
+    if (_fs2.default.existsSync(dest)) {
+      (0, _rimraf2.default)(dest, function () {
+        (0, _utils.log)(`removing ${_chalk2.default.red(dirname)} directory`);
+        resolve();
+      });
+    } else {
+      resolve();
+    }
   });
 };
 

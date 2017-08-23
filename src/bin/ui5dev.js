@@ -1,5 +1,4 @@
 #! /usr/bin/env node
-import path from 'path';
 import program from 'commander';
 
 import clean from '../commands/clean';
@@ -7,28 +6,35 @@ import build from '../commands/build';
 import serve from '../commands/serve';
 import open from '../commands/open';
 
-import { log, readConfig, validateSrc } from '../utils';
+import { log, readConfig, validateBuild } from '../utils';
 
 
 const config = readConfig();
 const version = require('../../package.json').version;
-const cwd = process.cwd();
-const src = path.join(cwd, config.sourceFolder);
-const dest = path.join(cwd, config.targetFolder);
+
+
+function serveContent(options) {
+  serve(config.dest, config.port, config.destinations);
+  if (options.openBrowser) {
+    open(options.openBrowser, config.port);
+  }
+}
 
 
 program
   .command('clean')
   .action(function() {
-    clean(dest);
+    if (validateBuild(config)) {
+      clean(config.dest);
+    }
   });
 
 program
   .command('build')
   .action(function() {
-    if (validateSrc(src, config.sourceFolder)) {
-      clean(dest).then(() => {
-        build(src, dest, {watch: false});
+    if (validateBuild(config)) {
+      clean(config.dest).then(() => {
+        build(config.src, config.dest, {watch: false});
       });
     }
   });
@@ -37,24 +43,22 @@ program
   .command('serve')
   .option('-b, --open-browser [path]', 'Open browser')
   .action(function(options) {
-    serve(dest, config.port, config.destinations);
-    if (options.openBrowser) {
-      open(options.openBrowser, config.port);
-    }
+    serveContent(options);
   });
 
 program
   .command('start')
   .option('-b, --open-browser [path]', 'Open browser')
   .action(function(options) {
-    if (validateSrc(src, config.sourceFolder)) {
-      clean(dest).then(() => {
-        build(src, dest, {watch: true});
-        serve(dest, config.port, config.destinations);
-        if (options.openBrowser) {
-          open(options.openBrowser, config.port);
-        }
-      });
+    if (config.buildRequired) {
+      if (validateBuild(config)) {
+        clean(config.dest).then(() => {
+          build(config.src, config.dest, {watch: true});
+          serveContent(options);
+        });
+      }
+    } else {
+      serveContent(options);
     }
   });
 

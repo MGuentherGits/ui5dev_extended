@@ -4,9 +4,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.log = undefined;
-exports.validateSrc = validateSrc;
+exports.validateBuild = validateBuild;
 exports.getAvailableIPAddresses = getAvailableIPAddresses;
 exports.readConfig = readConfig;
+exports.isSameDirectory = isSameDirectory;
 
 var _path = require('path');
 
@@ -32,12 +33,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const log = exports.log = console.log;
 
-function validateSrc(src, sourceFolder) {
-  if (_fs2.default.existsSync(src)) {
-    return true;
+function validateBuild(config) {
+  if (!config.buildRequired) {
+    log(_chalk2.default.red('Command not valid - no active build configration for this project.'));
+    return false;
   }
-  log(_chalk2.default.red(`Error: Missing \`${sourceFolder}\` folder. Are you in a correct directory?`));
-  return false;
+
+  if (!_fs2.default.existsSync(config.src)) {
+    log(_chalk2.default.red(`Error: Missing \`${config.sourceFolder}\` folder.`));
+    return false;
+  }
+
+  return true;
 }
 
 function getAvailableIPAddresses() {
@@ -49,8 +56,9 @@ function getAvailableIPAddresses() {
 
 function readConfig() {
   const cfg = {
-    sourceFolder: 'webapp',
-    targetFolder: 'dist',
+    sourceFolder: '',
+    targetFolder: '',
+    buildRequired: null,
     port: generatePortNumber(),
     destinations: []
   };
@@ -66,6 +74,9 @@ function readConfig() {
       if (config.build) {
         cfg.sourceFolder = config.build.sourceFolder || cfg.sourceFolder;
         cfg.targetFolder = config.build.targetFolder || cfg.targetFolder;
+        if (config.build.buildRequired !== undefined) {
+          cfg.buildRequired = config.build.buildRequired;
+        }
       }
     }
   } catch (ex) {
@@ -81,7 +92,7 @@ function readConfig() {
       routes = routes.filter(r => r.target.type === 'destination').map(route => {
         return {
           path: route.path,
-          system: route.target.name
+          targetSystem: route.target.name
         };
       });
       destinations = destinations.concat(routes);
@@ -95,25 +106,28 @@ function readConfig() {
     const configFile = _path2.default.join(cwd, 'config.json');
     if (_fs2.default.existsSync(configFile)) {
       const config = require(configFile);
-      const routes = config.routes || [];
+      const routes = config.destinations || [];
       destinations = destinations.concat(routes);
 
       cfg.sourceFolder = config.sourceFolder || cfg.sourceFolder;
       cfg.targetFolder = config.targetFolder || cfg.targetFolder;
       cfg.port = config.port || cfg.port;
+      if (config.buildRequired !== undefined) {
+        cfg.buildRequired = config.buildRequired;
+      }
     }
   } catch (ex) {
     log(_chalk2.default.red('Error parsing config.json file.'));
   }
 
   destinations = destinations.map(function (route) {
-    const logon = (0, _saplogonRead2.default)(route.system);
+    const logon = (0, _saplogonRead2.default)(route.targetSystem);
     if (!logon) {
-      log(_chalk2.default.red(`Error: Unknown system ${_chalk2.default.cyan(route.system)} for ${_chalk2.default.yellow(route.path)}`));
+      log(_chalk2.default.red(`Error: Unknown system ${_chalk2.default.cyan(route.targetSystem || '')} for ${_chalk2.default.yellow(route.path)}`));
       return null;
     }
     return {
-      system: route.system,
+      targetSystem: route.targetSystem,
       path: route.path,
       host: logon.host,
       https: false
@@ -121,7 +135,35 @@ function readConfig() {
   });
   cfg.destinations = destinations.filter(destination => destination !== null);
 
+  // check if we can use webapp folder
+  if (cfg.sourceFolder === '') {
+    const webappFolder = _path2.default.join(cwd, 'webapp');
+    if (_fs2.default.existsSync(webappFolder)) {
+      cfg.sourceFolder = 'webapp';
+      cfg.targetFolder = 'dist';
+    }
+  }
+
+  if (cfg.buildRequired === null) {
+    cfg.buildRequired = cfg.sourceFolder !== '';
+  } else {
+    if (cfg.sourceFolder === '') {
+      cfg.buildRequired = false;
+      log(`Build disabled because no source folder defined.`);
+    }
+  }
+  if (!cfg.buildRequired) {
+    cfg.targetFolder = cfg.sourceFolder;
+  }
+
+  cfg.src = _path2.default.join(cwd, cfg.sourceFolder);
+  cfg.dest = _path2.default.join(cwd, cfg.targetFolder);
+
   return cfg;
+}
+
+function isSameDirectory(dir1, dir2) {
+  return _path2.default.relative(dir1, dir2) === '';
 }
 
 /**

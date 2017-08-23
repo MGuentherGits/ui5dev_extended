@@ -1,10 +1,6 @@
 #! /usr/bin/env node
 'use strict';
 
-var _path = require('path');
-
-var _path2 = _interopRequireDefault(_path);
-
 var _commander = require('commander');
 
 var _commander2 = _interopRequireDefault(_commander);
@@ -31,38 +27,42 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const config = (0, _utils.readConfig)();
 const version = require('../../package.json').version;
-const cwd = process.cwd();
-const src = _path2.default.join(cwd, config.sourceFolder);
-const dest = _path2.default.join(cwd, config.targetFolder);
+
+function serveContent(options) {
+  (0, _serve2.default)(config.dest, config.port, config.destinations);
+  if (options.openBrowser) {
+    (0, _open2.default)(options.openBrowser, config.port);
+  }
+}
 
 _commander2.default.command('clean').action(function () {
-  (0, _clean2.default)(dest);
+  if ((0, _utils.validateBuild)(config)) {
+    (0, _clean2.default)(config.dest);
+  }
 });
 
 _commander2.default.command('build').action(function () {
-  if ((0, _utils.validateSrc)(src, config.sourceFolder)) {
-    (0, _clean2.default)(dest).then(() => {
-      (0, _build2.default)(src, dest, { watch: false });
+  if ((0, _utils.validateBuild)(config)) {
+    (0, _clean2.default)(config.dest).then(() => {
+      (0, _build2.default)(config.src, config.dest, { watch: false });
     });
   }
 });
 
 _commander2.default.command('serve').option('-b, --open-browser [path]', 'Open browser').action(function (options) {
-  (0, _serve2.default)(dest, config.port, config.destinations);
-  if (options.openBrowser) {
-    (0, _open2.default)(options.openBrowser, config.port);
-  }
+  serveContent(options);
 });
 
 _commander2.default.command('start').option('-b, --open-browser [path]', 'Open browser').action(function (options) {
-  if ((0, _utils.validateSrc)(src, config.sourceFolder)) {
-    (0, _clean2.default)(dest).then(() => {
-      (0, _build2.default)(src, dest, { watch: true });
-      (0, _serve2.default)(dest, config.port, config.destinations);
-      if (options.openBrowser) {
-        (0, _open2.default)(options.openBrowser, config.port);
-      }
-    });
+  if (config.buildRequired) {
+    if ((0, _utils.validateBuild)(config)) {
+      (0, _clean2.default)(config.dest).then(() => {
+        (0, _build2.default)(config.src, config.dest, { watch: true });
+        serveContent(options);
+      });
+    }
+  } else {
+    serveContent(options);
   }
 });
 

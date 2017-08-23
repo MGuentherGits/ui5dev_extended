@@ -1,3 +1,4 @@
+import path from 'path';
 import url from 'url';
 import express from 'express';
 import morgan from 'morgan';
@@ -20,15 +21,22 @@ function serve(dest, port, destinations) {
   });
 
   const server = app.listen(port, '0.0.0.0', function() {
-    log(`Development server listening on:`);
+    log('Development server listening on:');
     getAvailableIPAddresses().forEach(ip => {
-      log(chalk.yellow.underline(`http://${ip}:${port}/`));
+      log('> ' + chalk.yellow.underline(`http://${ip}:${port}/`));
     });
 
+    const dir = path.relative(process.cwd(), dest);
+    if (dir === '') {
+      log('and serving contend from current directory.');
+    } else {
+      log(`and serving content from ${chalk.yellow(dir)} directory.`);
+    }
+
     if (destinations.length > 0) {
-      log('Destinations:');
+      log('Loaded destinations:');
       destinations.forEach(destination => {
-        log(`${chalk.yellow(destination.path)} => ${chalk.cyan(destination.host)} (${destination.system})`);
+        log(`> ${chalk.yellow(destination.path)} => ${chalk.cyan(destination.host)} (${destination.targetSystem})`);
       });
     } else {
       log(`No external destinations loaded.`);

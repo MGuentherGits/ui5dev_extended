@@ -57,7 +57,44 @@ YourUI5App
 
 ## Configuration
 
-No configuration file is needed to start webserver, but if you need proxy (destinations) you can use `neo-app.json` configration from SAP Web IDE or provide `config.js` file which is a bit simpler to write. You can use both in one project.
+No configuration file is needed to start webserver, but you can privide `config.json` file for some customization.
+
+`config.json`
+```json
+{
+  "destinations": [
+    {
+      "path": "/sap/opu/odata",
+      "targetSystem": "BD0"
+    }    
+  ],
+  "sourceFolder": "webapp",
+  "targetFolder": "dist",
+  "buildRequired": true,
+  "port": 3100
+}
+```
+
+`ui5dev` also reads configuration from `neo-app.json` and `.project.json` files which are created by SAP Web IDE. You can use all of them in one project.
+
+
+## Destinations
+
+Destinations in `ui5dev` work very similar to that from SAP Web IDE - they allow you to proxy some urls to a different server. They are really usesful if you need to test OData services which are implemented in SAP Netweaver Geteway on a different machine. What is great here is that `ui5dev` can read access data to your SAP systems directly from SAP Logon. Just provide System ID of a system you want to connect as `targetSystem` and you are ready to go.
+ 
+`config.json`
+```json
+{
+  "destinations": [
+    {
+      "path": "/sap/opu/odata",
+      "targetSystem": "BD0"  /* SID of a system from SAP Logon */
+    }    
+  ]
+}
+```
+
+You can also use `routes` part from `neo-app.json`.
 
 `neo-app.json`
 ```json
@@ -67,7 +104,7 @@ No configuration file is needed to start webserver, but if you need proxy (desti
       "path": "/sap/opu/odata",
       "target": {
         "type": "destination",
-        "name": "BD0",
+        "name": "BD0",  /* SID of a system from SAP Logon */
         "entryPath": "/sap/opu/odata"
       },
       "description": "BD0 Development System"
@@ -75,24 +112,6 @@ No configuration file is needed to start webserver, but if you need proxy (desti
   ]
 }
 ```
-
-`config.json`
-```json
-{
-  "routes": [
-    {
-      "path": "/sap/opu/odata",
-      "system": "BD0"
-    }    
-  ],
-
-  "sourceFolder": "webapp",
-  "targetFolder": "dist",
-  "port": 3111
-}
-```
-
-`ui5dev` reads system information directly from SAP Logon configuration file using `saplogon-read` module which is also available in NPM Module Registry.
 
 
 ## ES6 and Babel

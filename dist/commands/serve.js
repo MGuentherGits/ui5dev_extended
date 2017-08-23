@@ -4,6 +4,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _path = require('path');
+
+var _path2 = _interopRequireDefault(_path);
+
 var _url = require('url');
 
 var _url2 = _interopRequireDefault(_url);
@@ -42,15 +46,22 @@ function serve(dest, port, destinations) {
   });
 
   const server = app.listen(port, '0.0.0.0', function () {
-    (0, _utils.log)(`Development server listening on:`);
+    (0, _utils.log)('Development server listening on:');
     (0, _utils.getAvailableIPAddresses)().forEach(ip => {
-      (0, _utils.log)(_chalk2.default.yellow.underline(`http://${ip}:${port}/`));
+      (0, _utils.log)('> ' + _chalk2.default.yellow.underline(`http://${ip}:${port}/`));
     });
 
+    const dir = _path2.default.relative(process.cwd(), dest);
+    if (dir === '') {
+      (0, _utils.log)('and serving contend from current directory.');
+    } else {
+      (0, _utils.log)(`and serving content from ${_chalk2.default.yellow(dir)} directory.`);
+    }
+
     if (destinations.length > 0) {
-      (0, _utils.log)('Destinations:');
+      (0, _utils.log)('Loaded destinations:');
       destinations.forEach(destination => {
-        (0, _utils.log)(`${_chalk2.default.yellow(destination.path)} => ${_chalk2.default.cyan(destination.host)} (${destination.system})`);
+        (0, _utils.log)(`> ${_chalk2.default.yellow(destination.path)} => ${_chalk2.default.cyan(destination.host)} (${destination.targetSystem})`);
       });
     } else {
       (0, _utils.log)(`No external destinations loaded.`);
