@@ -20,10 +20,6 @@ var _morgan = require('morgan');
 
 var _morgan2 = _interopRequireDefault(_morgan);
 
-var _chalk = require('chalk');
-
-var _chalk2 = _interopRequireDefault(_chalk);
-
 var _expressHttpProxy = require('express-http-proxy');
 
 var _expressHttpProxy2 = _interopRequireDefault(_expressHttpProxy);
@@ -47,30 +43,30 @@ function serve(dest, port, destinations) {
   });
 
   const server = app.listen(port, '0.0.0.0', function () {
-    (0, _utils.log)('Development server listening on:');
+    _utils.logger.writeln('Development server listening on:');
     (0, _utils.getAvailableIPAddresses)().forEach(ip => {
-      (0, _utils.log)('> ' + _chalk2.default.yellow.underline(`http://${ip}:${port}/`));
+      _utils.logger.writeln('> ' + _utils.logger.color.yellow.underline(`http://${ip}:${port}/`));
     });
 
     const dir = _path2.default.relative(process.cwd(), dest);
     if (dir === '') {
-      (0, _utils.log)('and serving contend from current directory.');
+      _utils.logger.writeln('and serving contend from current directory.');
     } else {
-      (0, _utils.log)(`and serving content from ${_chalk2.default.yellow(dir)} directory.`);
+      _utils.logger.writeln(`and serving content from ${_utils.logger.color.yellow(dir)} directory.`);
     }
 
     if (destinations.length > 0) {
-      (0, _utils.log)('Loaded destinations:');
+      _utils.logger.writeln('Loaded destinations:');
       destinations.forEach(destination => {
         const protocol = destination.https ? 'https://' : 'http://';
-        let logMsg = `> ${_chalk2.default.yellow(destination.path)} => ${_chalk2.default.yellow(protocol)}${_chalk2.default.cyan(destination.targetHost)}${_chalk2.default.yellow(destination.path)}`;
+        let logMsg = `> ${_utils.logger.color.yellow(destination.path)} => ${_utils.logger.color.yellow(protocol)}${_utils.logger.color.cyan(destination.targetHost)}${_utils.logger.color.yellow(destination.path)}`;
         if (destination.targetSystem) {
           logMsg += ` (${destination.targetSystem})`;
         }
-        (0, _utils.log)(logMsg);
+        _utils.logger.writeln(logMsg);
       });
     } else {
-      (0, _utils.log)(`No external destinations loaded.`);
+      _utils.logger.writeln(`No external destinations loaded.`);
     }
   });
 }

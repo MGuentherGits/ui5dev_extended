@@ -1,6 +1,6 @@
 {
   "name": "ui5dev",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "UI5 apps development server",
   "homepage": "https://bitbucket.org/zftrw-sap/ui5dev",
   "repository": {
@@ -17,8 +17,7 @@
   },
   "scripts": {
     "build": "babel src -d dist",
-    "build-watch": "npm run build -- --watch",
-    "test": "echo \"Error: no test specified\""
+    "build-watch": "babel src -d dist --watch --source-maps inline"
   },
   "author": "ZF TRW",
   "license": "MIT",
@@ -31,13 +30,16 @@
     "commander": "^2.9.0",
     "express": "^4.15.2",
     "express-http-proxy": "^1.0.4",
+    "isbinaryfile": "^3.0.2",
     "morgan": "^1.8.1",
     "opn": "^5.1.0",
     "output-file-sync": "^2.0.0",
+    "prompt": "^1.0.0",
     "rimraf": "^2.6.1",
     "rollup": "^0.41.6",
     "rollup-plugin-babel": "^2.7.1",
-    "saplogon-read": "^0.1.0"
+    "saplogon-read": "^0.1.0",
+    "xmldoc": "^1.1.0"
   },
   "babel": {
     "presets": [

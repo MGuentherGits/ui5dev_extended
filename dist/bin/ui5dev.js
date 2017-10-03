@@ -5,6 +5,10 @@ var _commander = require('commander');
 
 var _commander2 = _interopRequireDefault(_commander);
 
+var _prompt = require('prompt');
+
+var _prompt2 = _interopRequireDefault(_prompt);
+
 var _clean = require('../commands/clean');
 
 var _clean2 = _interopRequireDefault(_clean);
@@ -21,12 +25,20 @@ var _open = require('../commands/open');
 
 var _open2 = _interopRequireDefault(_open);
 
+var _deploy = require('../commands/deploy');
+
+var _deploy2 = _interopRequireDefault(_deploy);
+
 var _utils = require('../utils');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const config = (0, _utils.readConfig)();
 const version = require('../../package.json').version;
+
+_prompt2.default.message = '';
+_prompt2.default.delimiter = ':';
+_prompt2.default.colors = false;
 
 function serveContent(options) {
   (0, _serve2.default)(config.dest, config.port, config.destinations);
@@ -70,8 +82,21 @@ _commander2.default.command('open [path]').action(function (path) {
   (0, _open2.default)(path, config.port);
 });
 
-_commander2.default.command('deploy').action(function () {
-  (0, _utils.log)('Deployment is not implemented yet! :(');
+_commander2.default.command('deploy').option('-t, --transport <transport>', 'Use transport').option('-u, --user <user>', 'Auth user').action(function ({ transport, user }) {
+  const options = Object.assign({}, config.deploy, { transport, user });
+
+  if ((0, _utils.validateDeploy)(options, config.dest)) {
+    _prompt2.default.start();
+    _prompt2.default.get([{
+      name: 'password',
+      description: 'Enter your password',
+      hidden: true,
+      replace: '*'
+    }], function (err, { password }) {
+      options.password = password;
+      (0, _deploy2.default)(config.dest, options);
+    });
+  };
 });
 
 _commander2.default.version(version).parse(process.argv);

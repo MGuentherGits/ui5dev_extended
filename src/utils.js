@@ -1,24 +1,58 @@
 import path from 'path';
+import util from 'util';
 import fs from 'fs';
 import os from 'os';
 import chalk from 'chalk';
 import saplogon from 'saplogon-read';
 
 
-export const log = console.log;
+export const logger = {
+  write(...args) {
+    const string = util.format.apply(null, args);
+    process.stdout.write(string);
+  },
+
+  writeln(...args) {
+    const string = util.format.apply(null, args) + '\n';
+    process.stdout.write(string);
+  },
+
+  color: chalk,
+  format: util.format,
+}
 
 
 export function validateBuild(config) {
   if (!config.buildRequired) {
-    log(chalk.red('Command not valid - no active build configration for this project.'));
+    logger.writeln('Command not valid - no active build configration for this project.');
     return false;
   }
 
   if (!fs.existsSync(config.src)) {
-    log(chalk.red(`Error: Missing \`${config.sourceFolder}\` folder.`));
+    logger.writeln(logger.color.red(`Error: Missing \`${config.sourceFolder}\` folder.`));
     return false;
   }
 
+  return true;
+}
+
+export function validateDeploy(config, dist) {
+  if (!fs.existsSync(dist)) {
+    logger.writeln(`${logger.color.cyan(dist)} directory does not exist.`);
+    return false;
+  }
+  if (!config.user) {
+    logger.writeln('Use -u <user> to provide username.');
+    return false;
+  }
+  if (!config.name) {
+    logger.writeln('No app name (BSP container) defined. Please review your config file.');
+    return false;
+  }
+  if (!config.package) {
+    logger.writeln('No deployment package defined. Please review your config file.');
+    return false;
+  }
   return true;
 }
 
@@ -57,7 +91,7 @@ export function readConfig() {
 
   /* load config from .project.json */
   try {
-    const configFile = path.join(cwd, 'neo-app.json');
+    const configFile = path.join(cwd, '.project.json');
     if (fs.existsSync(configFile)) {
       const config = require(configFile);
       if (config.build) {
@@ -66,10 +100,15 @@ export function readConfig() {
         if (config.build.buildRequired !== undefined) {
           cfg.buildRequired = config.build.buildRequired;
         }
+
+        cfg.deploy = config.deploy || {};
+        if (cfg.deploy.destination) {
+          cfg.deploy.system = cfg.deploy.system;
+        }
       }
     }
   } catch (ex) {
-    log(chalk.red('Error parsing .project.json file.'));
+    logger.writeln(logger.color.red('Error parsing .project.json file.'));
   }
   
   /* load config from neo-app.json */
@@ -84,7 +123,12 @@ export function readConfig() {
         };
 
         if (route.target.type === 'destination') {
-          rv.targetSystem = route.target.name;
+          if (route.target.host) {
+            rv.targetHost = route.target.host;
+            rv.https = route.target.https || false;
+          } else {
+            rv.targetSystem = route.target.name;
+          }
         } else if (route.target.type === 'service' && route.target.name === 'sapui5') {
           rv.targetHost = 'sapui5.hana.ondemand.com';
           if (route.target.serviceVersion) {
@@ -98,7 +142,7 @@ export function readConfig() {
       destinations = destinations.concat(routes);
     }
   } catch (ex) {
-    log(chalk.red('Error parsing neo-app.json file.'));
+    logger.writeln(logger.color.red('Error parsing neo-app.json file.'));
   }
 
   /* load config from config.json */
@@ -115,22 +159,23 @@ export function readConfig() {
       if (config.buildRequired !== undefined) {
         cfg.buildRequired = config.buildRequired;
       }
+      cfg.deploy = Object.assign({}, cfg.deploy, config.deploy);
     }
   } catch (ex) {
-    log(chalk.red('Error parsing config.json file.'));
+    logger.writeln(logger.color.red('Error parsing config.json file.'));
   }
 
   destinations = destinations.map(function(route) {
     if (route.targetSystem) {
       const logon = saplogon(route.targetSystem);
       if (!logon) {
-        log(chalk.red(`Error: Unknown system ${chalk.cyan(route.targetSystem || '')} for ${chalk.yellow(route.path)}`));
+        logger.writeln(logger.color.red(`Error: Unknown system ${logger.color.cyan(route.targetSystem || '')} for ${logger.color.yellow(route.path)}`));
         return null;
       }
       route.targetHost = logon.host;
     }
     if (!route.targetHost) {
-      log(chalk.red(`Error: No target host for ${chalk.yellow(route.path)}`));
+      logger.writeln(logger.color.red(`Error: No target host for ${logger.color.yellow(route.path)}`));
       return null;
     }
     return {
@@ -156,7 +201,7 @@ export function readConfig() {
   } else {
     if (cfg.sourceFolder === '') {
       cfg.buildRequired = false;
-      log(`Build disabled because no source folder defined.`);
+      logger.writeln(`Build disabled because no source folder defined.`);
     }
   }
   if (!cfg.buildRequired) {

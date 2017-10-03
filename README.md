@@ -38,6 +38,10 @@ $ ui5dev open [path]
 ```
 - opens system browser with the url to the development server. Make sure the server is running. The optional `path` argument is appended to the url if you need to navigate to anything other then `index.html`.
 
+```
+$ ui5dev deploy -t <transport> -u <user>
+```
+- deploys `dist` folder to the system provided in the config file. You need to provide valid tranport number and username as command arguments.
 
 ## App structure
 
@@ -57,7 +61,7 @@ YourUI5App
 
 ## Configuration
 
-No configuration file is needed to start webserver, but you can privide `config.json` file for some customization.
+No configuration file is needed to start webserver, but you can create `config.json` file for some customization.
 
 `config.json`
 ```json
@@ -68,6 +72,12 @@ No configuration file is needed to start webserver, but you can privide `config.
       "targetSystem": "BD0"
     }    
   ],
+  "deploy": {
+    "system": "BD0",
+    "package": "ZBD0TT001",
+    "name": "ZUI5APP",
+    "description": "My UI5 App"
+  },
   "sourceFolder": "webapp",
   "targetFolder": "dist",
   "buildRequired": true,
@@ -95,7 +105,7 @@ Destinations in `ui5dev` work very similar to that from SAP Web IDE - they allow
       "targetHost": "sapui5.hana.ondemand.com", /* or: sapui5.hana.ondemand.com/1.28.9 */
       "https": true
     }
-  ]
+  ],
 }
 ```
 
@@ -138,7 +148,29 @@ But please note that SAP Web IDE does not support Babel transpilation so if you 
 
 ## Deployment
 
-Currently there is no command for app deployment to SAP Netweaver Gateway. But you can go to transaction SE38 and provide the program name as `/UI5/UI5_REPOSITORY_LOAD`. Just publish everything what is inside `dist` directory.  
+First create `deploy` section in `config.json` file, e.g
+```json
+{
+  "deploy": {
+    "system": "BD0",
+    "client": 110,
+    "package": "ZBD0TT001",
+    "name": "ZUI5APP",
+    "description": "My UI5 App"
+  }
+}
+```
+Properties `client` and `description` are optional.
+
+Then run
+```
+ui5dev deploy -t <transport> -u <user>
+```
+You need to provide valid transport number and username and you will be promoted for user password.
+
+If you deploy to `$TMP` package, then transport number is not required.
+
+Alternatively you can go to transaction `SE38` and provide the program name as `/UI5/UI5_REPOSITORY_LOAD`. Just publish everything what is inside `dist` directory.  
 
 
 ## License

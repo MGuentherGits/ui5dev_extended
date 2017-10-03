@@ -3,8 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.log = undefined;
+exports.logger = undefined;
 exports.validateBuild = validateBuild;
+exports.validateDeploy = validateDeploy;
 exports.getAvailableIPAddresses = getAvailableIPAddresses;
 exports.splitHost = splitHost;
 exports.readConfig = readConfig;
@@ -13,6 +14,10 @@ exports.isSameDirectory = isSameDirectory;
 var _path = require('path');
 
 var _path2 = _interopRequireDefault(_path);
+
+var _util = require('util');
+
+var _util2 = _interopRequireDefault(_util);
 
 var _fs = require('fs');
 
@@ -32,19 +37,52 @@ var _saplogonRead2 = _interopRequireDefault(_saplogonRead);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const log = exports.log = console.log;
+const logger = exports.logger = {
+  write(...args) {
+    const string = _util2.default.format.apply(null, args);
+    process.stdout.write(string);
+  },
+
+  writeln(...args) {
+    const string = _util2.default.format.apply(null, args) + '\n';
+    process.stdout.write(string);
+  },
+
+  color: _chalk2.default,
+  format: _util2.default.format
+};
 
 function validateBuild(config) {
   if (!config.buildRequired) {
-    log(_chalk2.default.red('Command not valid - no active build configration for this project.'));
+    logger.writeln('Command not valid - no active build configration for this project.');
     return false;
   }
 
   if (!_fs2.default.existsSync(config.src)) {
-    log(_chalk2.default.red(`Error: Missing \`${config.sourceFolder}\` folder.`));
+    logger.writeln(logger.color.red(`Error: Missing \`${config.sourceFolder}\` folder.`));
     return false;
   }
 
+  return true;
+}
+
+function validateDeploy(config, dist) {
+  if (!_fs2.default.existsSync(dist)) {
+    logger.writeln(`${logger.color.cyan(dist)} directory does not exist.`);
+    return false;
+  }
+  if (!config.user) {
+    logger.writeln('Use -u <user> to provide username.');
+    return false;
+  }
+  if (!config.name) {
+    logger.writeln('No app name (BSP container) defined. Please review your config file.');
+    return false;
+  }
+  if (!config.package) {
+    logger.writeln('No deployment package defined. Please review your config file.');
+    return false;
+  }
   return true;
 }
 
@@ -79,7 +117,7 @@ function readConfig() {
 
   /* load config from .project.json */
   try {
-    const configFile = _path2.default.join(cwd, 'neo-app.json');
+    const configFile = _path2.default.join(cwd, '.project.json');
     if (_fs2.default.existsSync(configFile)) {
       const config = require(configFile);
       if (config.build) {
@@ -88,10 +126,15 @@ function readConfig() {
         if (config.build.buildRequired !== undefined) {
           cfg.buildRequired = config.build.buildRequired;
         }
+
+        cfg.deploy = config.deploy || {};
+        if (cfg.deploy.destination) {
+          cfg.deploy.system = cfg.deploy.system;
+        }
       }
     }
   } catch (ex) {
-    log(_chalk2.default.red('Error parsing .project.json file.'));
+    logger.writeln(logger.color.red('Error parsing .project.json file.'));
   }
 
   /* load config from neo-app.json */
@@ -106,7 +149,12 @@ function readConfig() {
         };
 
         if (route.target.type === 'destination') {
-          rv.targetSystem = route.target.name;
+          if (route.target.host) {
+            rv.targetHost = route.target.host;
+            rv.https = route.target.https || false;
+          } else {
+            rv.targetSystem = route.target.name;
+          }
         } else if (route.target.type === 'service' && route.target.name === 'sapui5') {
           rv.targetHost = 'sapui5.hana.ondemand.com';
           if (route.target.serviceVersion) {
@@ -120,7 +168,7 @@ function readConfig() {
       destinations = destinations.concat(routes);
     }
   } catch (ex) {
-    log(_chalk2.default.red('Error parsing neo-app.json file.'));
+    logger.writeln(logger.color.red('Error parsing neo-app.json file.'));
   }
 
   /* load config from config.json */
@@ -137,22 +185,23 @@ function readConfig() {
       if (config.buildRequired !== undefined) {
         cfg.buildRequired = config.buildRequired;
       }
+      cfg.deploy = Object.assign({}, cfg.deploy, config.deploy);
     }
   } catch (ex) {
-    log(_chalk2.default.red('Error parsing config.json file.'));
+    logger.writeln(logger.color.red('Error parsing config.json file.'));
   }
 
   destinations = destinations.map(function (route) {
     if (route.targetSystem) {
       const logon = (0, _saplogonRead2.default)(route.targetSystem);
       if (!logon) {
-        log(_chalk2.default.red(`Error: Unknown system ${_chalk2.default.cyan(route.targetSystem || '')} for ${_chalk2.default.yellow(route.path)}`));
+        logger.writeln(logger.color.red(`Error: Unknown system ${logger.color.cyan(route.targetSystem || '')} for ${logger.color.yellow(route.path)}`));
         return null;
       }
       route.targetHost = logon.host;
     }
     if (!route.targetHost) {
-      log(_chalk2.default.red(`Error: No target host for ${_chalk2.default.yellow(route.path)}`));
+      logger.writeln(logger.color.red(`Error: No target host for ${logger.color.yellow(route.path)}`));
       return null;
     }
     return {
@@ -178,7 +227,7 @@ function readConfig() {
   } else {
     if (cfg.sourceFolder === '') {
       cfg.buildRequired = false;
-      log(`Build disabled because no source folder defined.`);
+      logger.writeln(`Build disabled because no source folder defined.`);
     }
   }
   if (!cfg.buildRequired) {

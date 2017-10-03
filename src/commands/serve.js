@@ -2,9 +2,8 @@ import path from 'path';
 import url from 'url';
 import express from 'express';
 import morgan from 'morgan';
-import chalk from 'chalk';
 import proxy from 'express-http-proxy';
-import { log, getAvailableIPAddresses, splitHost } from '../utils';
+import { logger, getAvailableIPAddresses, splitHost } from '../utils';
 
 
 function serve(dest, port, destinations) {
@@ -22,30 +21,30 @@ function serve(dest, port, destinations) {
   });
 
   const server = app.listen(port, '0.0.0.0', function() {
-    log('Development server listening on:');
+    logger.writeln('Development server listening on:');
     getAvailableIPAddresses().forEach(ip => {
-      log('> ' + chalk.yellow.underline(`http://${ip}:${port}/`));
+      logger.writeln('> ' + logger.color.yellow.underline(`http://${ip}:${port}/`));
     });
 
     const dir = path.relative(process.cwd(), dest);
     if (dir === '') {
-      log('and serving contend from current directory.');
+      logger.writeln('and serving contend from current directory.');
     } else {
-      log(`and serving content from ${chalk.yellow(dir)} directory.`);
+      logger.writeln(`and serving content from ${logger.color.yellow(dir)} directory.`);
     }
 
     if (destinations.length > 0) {
-      log('Loaded destinations:');
+      logger.writeln('Loaded destinations:');
       destinations.forEach(destination => {
         const protocol = destination.https ? 'https://' : 'http://';
-        let logMsg = `> ${chalk.yellow(destination.path)} => ${chalk.yellow(protocol)}${chalk.cyan(destination.targetHost)}${chalk.yellow(destination.path)}`;
+        let logMsg = `> ${logger.color.yellow(destination.path)} => ${logger.color.yellow(protocol)}${logger.color.cyan(destination.targetHost)}${logger.color.yellow(destination.path)}`;
         if (destination.targetSystem) {
           logMsg += ` (${destination.targetSystem})`;
         }
-        log(logMsg);
+        logger.writeln(logMsg);
       });
     } else {
-      log(`No external destinations loaded.`);
+      logger.writeln(`No external destinations loaded.`);
     }
   });
 }

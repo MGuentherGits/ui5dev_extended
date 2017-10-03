@@ -1,16 +1,22 @@
 #! /usr/bin/env node
 import program from 'commander';
+import prompt from 'prompt';
 
 import clean from '../commands/clean';
 import build from '../commands/build';
 import serve from '../commands/serve';
 import open from '../commands/open';
+import deploy from '../commands/deploy';
 
-import { log, readConfig, validateBuild } from '../utils';
+import { readConfig, validateBuild, validateDeploy } from '../utils';
 
 
 const config = readConfig();
 const version = require('../../package.json').version;
+
+prompt.message = '';
+prompt.delimiter = ':';
+prompt.colors = false;
 
 
 function serveContent(options) {
@@ -70,8 +76,23 @@ program
 
 program
   .command('deploy')
-  .action(function() {
-    log('Deployment is not implemented yet! :(');
+  .option('-t, --transport <transport>', 'Use transport')
+  .option('-u, --user <user>', 'Auth user')
+  .action(function({transport, user}) {
+    const options = Object.assign({}, config.deploy, {transport, user});
+    
+    if (validateDeploy(options, config.dest)) {
+      prompt.start();
+      prompt.get([{
+        name: 'password',
+        description: 'Enter your password',
+        hidden: true,
+        replace: '*',
+      }], function(err, {password}) {
+        options.password = password; 
+        deploy(config.dest, options);
+      });
+    };
   });
 
 

@@ -4,9 +4,8 @@ import fs from 'fs';
 import * as rollup from 'rollup';
 import babel from 'rollup-plugin-babel';
 import outputFileSync from 'output-file-sync';
-import chalk from 'chalk';
 
-import { log } from '../utils';
+import { logger } from '../utils';
 
 const babelrc = {
   presets: [
@@ -20,7 +19,7 @@ const babelrc = {
   babelrc: false
 };
 
-function walkSync(dir, filelist) {
+export function walkSync(dir, filelist) {
   const files = fs.readdirSync(dir);
   filelist = filelist || [];
   files.forEach(function(file) {
@@ -50,7 +49,7 @@ function compileFile(src, dest, filename) {
     entry: path.join(src, filename),
     plugins: [babel(babelrc)]
   }).then(function(bundle) {
-    log(`compiling ${chalk.green(filename)}`);
+    logger.writeln(`compiling ${logger.color.green(filename)}`);
     bundle.write({
       format: 'cjs',
       dest: path.join(dest, filename)
@@ -59,7 +58,7 @@ function compileFile(src, dest, filename) {
 }
 
 function copyFile(src, dest, filename) {
-  log(`copying ${chalk.cyan(filename)}`);
+  logger.writeln(`copying ${logger.color.cyan(filename)}`);
 
   outputFileSync(
     path.join(dest, filename),

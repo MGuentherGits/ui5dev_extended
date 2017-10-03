@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.walkSync = walkSync;
 
 var _path = require('path');
 
@@ -23,10 +24,6 @@ var _rollupPluginBabel2 = _interopRequireDefault(_rollupPluginBabel);
 var _outputFileSync = require('output-file-sync');
 
 var _outputFileSync2 = _interopRequireDefault(_outputFileSync);
-
-var _chalk = require('chalk');
-
-var _chalk2 = _interopRequireDefault(_chalk);
 
 var _utils = require('../utils');
 
@@ -71,7 +68,7 @@ function compileFile(src, dest, filename) {
     entry: _path2.default.join(src, filename),
     plugins: [(0, _rollupPluginBabel2.default)(babelrc)]
   }).then(function (bundle) {
-    (0, _utils.log)(`compiling ${_chalk2.default.green(filename)}`);
+    _utils.logger.writeln(`compiling ${_utils.logger.color.green(filename)}`);
     bundle.write({
       format: 'cjs',
       dest: _path2.default.join(dest, filename)
@@ -80,7 +77,7 @@ function compileFile(src, dest, filename) {
 }
 
 function copyFile(src, dest, filename) {
-  (0, _utils.log)(`copying ${_chalk2.default.cyan(filename)}`);
+  _utils.logger.writeln(`copying ${_utils.logger.color.cyan(filename)}`);
 
   (0, _outputFileSync2.default)(_path2.default.join(dest, filename), _fs2.default.readFileSync(_path2.default.join(src, filename)));
 }
