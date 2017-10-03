@@ -55,16 +55,16 @@ YourUI5App
 │       ├── App.controller.json
 │       └── App.view.html
 ├── neo-app.json
-└── config.json
+└── ui5dev.config.json
 ```
 
 
 ## Configuration
 
-No configuration file is needed to start webserver, but you can create `config.json` file for some customization.
+No configuration file is needed to start webserver, but you can create `ui5dev.config.json` file for some customization.
 
-`config.json`
-```json
+`ui5dev.config.json`
+```js
 {
   "destinations": [
     {
@@ -92,17 +92,17 @@ No configuration file is needed to start webserver, but you can create `config.j
 
 Destinations in `ui5dev` work very similar to that from SAP Web IDE - they allow you to proxy some urls to a different server. They are really usesful if you need to test OData services which are implemented in SAP Netweaver Geteway on a different machine. What is great here is that `ui5dev` can read access data to your SAP systems directly from SAP Logon. Just provide System ID of a system you want to connect as `targetSystem` and you are ready to go.
  
-`config.json`
-```json
+`ui5dev.config.json`
+```js
 {
   "destinations": [
     {
       "path": "/sap/opu/odata",
-      "targetSystem": "BD0" /* SID of a system from SAP Logon */
+      "targetSystem": "BD0"  // SID of a system from SAP Logon
     }    
     {
       "path": "/resources",
-      "targetHost": "sapui5.hana.ondemand.com", /* or: sapui5.hana.ondemand.com/1.28.9 */
+      "targetHost": "sapui5.hana.ondemand.com",  // or: sapui5.hana.ondemand.com/1.28.9
       "https": true
     }
   ],
@@ -112,14 +112,14 @@ Destinations in `ui5dev` work very similar to that from SAP Web IDE - they allow
 You can also use `routes` part from `neo-app.json`.
 
 `neo-app.json`
-```json
+```js
 {
   "routes": [
     {
       "path": "/sap/opu/odata",
       "target": {
         "type": "destination",
-        "name": "BD0", /* SID of a system from SAP Logon */
+        "name": "BD0",  // SID of a system from SAP Logon
         "entryPath": "/sap/opu/odata"
       },
       "description": "BD0 Development System"
@@ -128,7 +128,7 @@ You can also use `routes` part from `neo-app.json`.
       "path": "/resources",
       "target": {
         "type": "service",
-        "serviceVersion": "1.32.18", /* add this for specific SAPUI5 version */
+        "serviceVersion": "1.32.18",  // add this for specific SAPUI5 version
         "name": "sapui5",
         "entryPath": "/resources"
       },
@@ -148,8 +148,8 @@ But please note that SAP Web IDE does not support Babel transpilation so if you 
 
 ## Deployment
 
-First create `deploy` section in `config.json` file, e.g
-```json
+First create `deploy` section in `ui5dev.config.json` file, e.g.
+```js
 {
   "deploy": {
     "system": "BD0",

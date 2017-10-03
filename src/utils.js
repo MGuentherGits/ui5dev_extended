@@ -145,9 +145,9 @@ export function readConfig() {
     logger.writeln(logger.color.red('Error parsing neo-app.json file.'));
   }
 
-  /* load config from config.json */
+  /* load config from ui5dev.config.json */
   try {
-    const configFile = path.join(cwd, 'config.json');
+    const configFile = path.join(cwd, 'ui5dev.config.json');
     if (fs.existsSync(configFile)) {
       const config = require(configFile);
       const routes = config.destinations || [];
@@ -162,7 +162,7 @@ export function readConfig() {
       cfg.deploy = Object.assign({}, cfg.deploy, config.deploy);
     }
   } catch (ex) {
-    logger.writeln(logger.color.red('Error parsing config.json file.'));
+    logger.writeln(logger.color.red('Error parsing ui5dev.config.json file.'));
   }
 
   destinations = destinations.map(function(route) {
