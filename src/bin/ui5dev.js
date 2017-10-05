@@ -20,7 +20,7 @@ prompt.colors = false;
 
 
 function serveContent(options) {
-  serve(config.dest, config.port, config.destinations);
+  serve(config.dest, config.port, config.proxy);
   if (options.openBrowser) {
     open(options.openBrowser, config.port);
   }
@@ -39,9 +39,8 @@ program
   .command('build')
   .action(function() {
     if (validateBuild(config)) {
-      clean(config.dest).then(() => {
-        build(config.src, config.dest, {watch: false});
-      });
+      clean(config.dest)
+      build(config.src, config.dest, {watch: false});
     }
   });
 
@@ -58,10 +57,9 @@ program
   .action(function(options) {
     if (config.buildRequired) {
       if (validateBuild(config)) {
-        clean(config.dest).then(() => {
-          build(config.src, config.dest, {watch: true});
-          serveContent(options);
-        });
+        clean(config.dest);
+        serveContent(options);
+        build(config.src, config.dest, {watch: true});
       }
     } else {
       serveContent(options);

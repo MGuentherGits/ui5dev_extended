@@ -68,7 +68,7 @@ function compileFile(src, dest, filename) {
     entry: _path2.default.join(src, filename),
     plugins: [(0, _rollupPluginBabel2.default)(babelrc)]
   }).then(function (bundle) {
-    _utils.logger.writeln(`compiling ${_utils.logger.color.green(filename)}`);
+    _utils.logger.writeln(`Compiling ${_utils.logger.color.green(filename)}`);
     bundle.write({
       format: 'cjs',
       dest: _path2.default.join(dest, filename)
@@ -77,7 +77,7 @@ function compileFile(src, dest, filename) {
 }
 
 function copyFile(src, dest, filename) {
-  _utils.logger.writeln(`copying ${_utils.logger.color.cyan(filename)}`);
+  _utils.logger.writeln(`Copying ${_utils.logger.color.cyan(filename)}`);
 
   (0, _outputFileSync2.default)(_path2.default.join(dest, filename), _fs2.default.readFileSync(_path2.default.join(src, filename)));
 }

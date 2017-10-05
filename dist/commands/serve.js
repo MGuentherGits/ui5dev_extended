@@ -20,30 +20,33 @@ var _morgan = require('morgan');
 
 var _morgan2 = _interopRequireDefault(_morgan);
 
-var _expressHttpProxy = require('express-http-proxy');
+var _httpProxyMiddleware = require('http-proxy-middleware');
 
-var _expressHttpProxy2 = _interopRequireDefault(_expressHttpProxy);
+var _httpProxyMiddleware2 = _interopRequireDefault(_httpProxyMiddleware);
+
+var _httpsProxyAgent = require('https-proxy-agent');
+
+var _httpsProxyAgent2 = _interopRequireDefault(_httpsProxyAgent);
 
 var _utils = require('../utils');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function serve(dest, port, destinations) {
+function serve(dest, port, proxies) {
   const app = (0, _express2.default)();
 
   app.use((0, _morgan2.default)('short'));
   app.use(_express2.default.static(dest));
 
-  destinations.forEach(function (destination) {
-    const { host, hostSufix } = (0, _utils.splitHost)(destination.targetHost);
-    app.use(destination.path, (0, _expressHttpProxy2.default)(host, {
-      proxyReqPathResolver: req => hostSufix + destination.path + _url2.default.parse(req.url).path,
-      https: destination.https
-    }));
+  Object.entries(proxies).forEach(([path, options]) => {
+    if (options.useCorporateProxy) {
+      options.agent = new _httpsProxyAgent2.default(options.useCorporateProxy);
+    }
+    app.use(path, (0, _httpProxyMiddleware2.default)(options));
   });
 
   const server = app.listen(port, '0.0.0.0', function () {
-    _utils.logger.writeln('Development server listening on:');
+    _utils.logger.writeln('Development server listening at:');
     (0, _utils.getAvailableIPAddresses)().forEach(ip => {
       _utils.logger.writeln('> ' + _utils.logger.color.yellow.underline(`http://${ip}:${port}/`));
     });
@@ -55,18 +58,23 @@ function serve(dest, port, destinations) {
       _utils.logger.writeln(`and serving content from ${_utils.logger.color.yellow(dir)} directory.`);
     }
 
-    if (destinations.length > 0) {
-      _utils.logger.writeln('Loaded destinations:');
-      destinations.forEach(destination => {
-        const protocol = destination.https ? 'https://' : 'http://';
-        let logMsg = `> ${_utils.logger.color.yellow(destination.path)} => ${_utils.logger.color.yellow(protocol)}${_utils.logger.color.cyan(destination.targetHost)}${_utils.logger.color.yellow(destination.path)}`;
-        if (destination.targetSystem) {
-          logMsg += ` (${destination.targetSystem})`;
+    if (Object.keys(proxies).length > 0) {
+      _utils.logger.writeln('Loaded proxies:');
+      Object.entries(proxies).forEach(([path, { target, system, useCorporateProxy }]) => {
+        let logMsg = `> ${_utils.logger.color.yellow(path)} => ${_utils.logger.color.cyan(target)}`;
+        if (path !== '*') {
+          logMsg += _utils.logger.color.yellow(path);
+        }
+        if (system) {
+          logMsg += ` (${system})`;
+        }
+        if (useCorporateProxy) {
+          logMsg += ` (corporate proxy: ${useCorporateProxy})`;
         }
         _utils.logger.writeln(logMsg);
       });
     } else {
-      _utils.logger.writeln(`No external destinations loaded.`);
+      _utils.logger.writeln(`No proxy loaded.`);
     }
   });
 }

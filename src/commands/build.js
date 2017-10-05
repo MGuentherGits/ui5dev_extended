@@ -49,7 +49,7 @@ function compileFile(src, dest, filename) {
     entry: path.join(src, filename),
     plugins: [babel(babelrc)]
   }).then(function(bundle) {
-    logger.writeln(`compiling ${logger.color.green(filename)}`);
+    logger.writeln(`Compiling ${logger.color.green(filename)}`);
     bundle.write({
       format: 'cjs',
       dest: path.join(dest, filename)
@@ -58,7 +58,7 @@ function compileFile(src, dest, filename) {
 }
 
 function copyFile(src, dest, filename) {
-  logger.writeln(`copying ${logger.color.cyan(filename)}`);
+  logger.writeln(`Copying ${logger.color.cyan(filename)}`);
 
   outputFileSync(
     path.join(dest, filename),

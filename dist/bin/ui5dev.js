@@ -41,7 +41,7 @@ _prompt2.default.delimiter = ':';
 _prompt2.default.colors = false;
 
 function serveContent(options) {
-  (0, _serve2.default)(config.dest, config.port, config.destinations);
+  (0, _serve2.default)(config.dest, config.port, config.proxy);
   if (options.openBrowser) {
     (0, _open2.default)(options.openBrowser, config.port);
   }
@@ -55,9 +55,8 @@ _commander2.default.command('clean').action(function () {
 
 _commander2.default.command('build').action(function () {
   if ((0, _utils.validateBuild)(config)) {
-    (0, _clean2.default)(config.dest).then(() => {
-      (0, _build2.default)(config.src, config.dest, { watch: false });
-    });
+    (0, _clean2.default)(config.dest);
+    (0, _build2.default)(config.src, config.dest, { watch: false });
   }
 });
 
@@ -68,10 +67,9 @@ _commander2.default.command('serve').option('-b, --open-browser [path]', 'Open b
 _commander2.default.command('start').option('-b, --open-browser [path]', 'Open browser').action(function (options) {
   if (config.buildRequired) {
     if ((0, _utils.validateBuild)(config)) {
-      (0, _clean2.default)(config.dest).then(() => {
-        (0, _build2.default)(config.src, config.dest, { watch: true });
-        serveContent(options);
-      });
+      (0, _clean2.default)(config.dest);
+      serveContent(options);
+      (0, _build2.default)(config.src, config.dest, { watch: true });
     }
   } else {
     serveContent(options);

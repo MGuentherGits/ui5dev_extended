@@ -19,6 +19,10 @@ var _util = require('util');
 
 var _util2 = _interopRequireDefault(_util);
 
+var _url = require('url');
+
+var _url2 = _interopRequireDefault(_url);
+
 var _fs = require('fs');
 
 var _fs2 = _interopRequireDefault(_fs);
@@ -109,11 +113,10 @@ function readConfig() {
     targetFolder: '',
     buildRequired: null,
     port: generatePortNumber(),
-    destinations: []
+    proxy: {}
   };
 
   const cwd = process.cwd();
-  let destinations = [];
 
   /* load config from .project.json */
   try {
@@ -133,8 +136,9 @@ function readConfig() {
         }
       }
     }
-  } catch (ex) {
+  } catch (error) {
     logger.writeln(logger.color.red('Error parsing .project.json file.'));
+    logger.writeln(logger.color.red(error));
   }
 
   /* load config from neo-app.json */
@@ -143,32 +147,18 @@ function readConfig() {
     if (_fs2.default.existsSync(configFile)) {
       const config = require(configFile);
       let routes = config.routes || [];
-      routes = routes.map(route => {
-        const rv = {
-          path: route.path
-        };
-
+      routes = routes.forEach(route => {
         if (route.target.type === 'destination') {
-          if (route.target.host) {
-            rv.targetHost = route.target.host;
-            rv.https = route.target.https || false;
-          } else {
-            rv.targetSystem = route.target.name;
-          }
+          cfg.proxy[route.path] = { target: route.target.name };
         } else if (route.target.type === 'service' && route.target.name === 'sapui5') {
-          rv.targetHost = 'sapui5.hana.ondemand.com';
-          if (route.target.serviceVersion) {
-            rv.targetHost += '/' + route.target.serviceVersion;
-          }
-          rv.https = true;
+          const libraryVersion = route.target.libraryVersion || 'sdk';
+          cfg.proxy[route.path] = { target: 'https://sapui5.hana.ondemand.com/' + libraryVersion };
         }
-        return rv;
       });
-
-      destinations = destinations.concat(routes);
     }
-  } catch (ex) {
+  } catch (error) {
     logger.writeln(logger.color.red('Error parsing neo-app.json file.'));
+    logger.writeln(logger.color.red(error));
   }
 
   /* load config from ui5dev.config.json */
@@ -176,8 +166,27 @@ function readConfig() {
     const configFile = _path2.default.join(cwd, 'ui5dev.config.json');
     if (_fs2.default.existsSync(configFile)) {
       const config = require(configFile);
-      const routes = config.destinations || [];
-      destinations = destinations.concat(routes);
+
+      if (typeof config.proxy === 'string') {
+        try {
+          const options = {};
+          const target = expandSystemUrl(config.proxy, options);
+          cfg.proxy = {
+            '/resources': Object.assign({ target: target + '/sap/public/bc/ui5_ui5/1' }, options),
+            '*': Object.assign({ target }, options)
+          };
+        } catch (error) {
+          logger.writeln(`Unknown system in your proxy settings.`);
+        }
+      } else if (typeof config.proxy === 'object') {
+        Object.keys(config.proxy).forEach(path => {
+          let proxyOptions = config.proxy[path];
+          if (typeof proxyOptions === 'string') {
+            proxyOptions = { target: proxyOptions };
+          }
+          cfg.proxy[path] = proxyOptions;
+        });
+      }
 
       cfg.sourceFolder = config.sourceFolder || cfg.sourceFolder;
       cfg.targetFolder = config.targetFolder || cfg.targetFolder;
@@ -187,31 +196,36 @@ function readConfig() {
       }
       cfg.deploy = Object.assign({}, cfg.deploy, config.deploy);
     }
-  } catch (ex) {
+  } catch (error) {
     logger.writeln(logger.color.red('Error parsing ui5dev.config.json file.'));
+    logger.writeln(logger.color.red(error));
   }
 
-  destinations = destinations.map(function (route) {
-    if (route.targetSystem) {
-      const logon = (0, _saplogonRead2.default)(route.targetSystem);
-      if (!logon) {
-        logger.writeln(logger.color.red(`Error: Unknown system ${logger.color.cyan(route.targetSystem || '')} for ${logger.color.yellow(route.path)}`));
-        return null;
+  Object.keys(cfg.proxy).forEach(path => {
+    const proxyOptions = cfg.proxy[path];
+    try {
+      proxyOptions.target = expandSystemUrl(proxyOptions.target, proxyOptions);
+    } catch (error) {
+      logger.writeln(logger.color.red(`Unknown system ${logger.color.yellow(proxyOptions.system)} for path ${logger.color.yellow(path)} in your proxy setting.`));
+      delete cfg.proxy[path];
+      return;
+    }
+    if (typeof proxyOptions.changeOrigin === 'undefined') {
+      proxyOptions.changeOrigin = true;
+    }
+    if (typeof proxyOptions.logLevel === 'undefined') {
+      proxyOptions.logLevel = 'warn';
+    }
+    if (proxyOptions.useCorporateProxy && proxyOptions.useCorporateProxy === true) {
+      const proxyServer = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+      if (!proxyServer) {
+        logger.writeln(logger.color.red(`Unknown corporate proxy server for path ${logger.color.yellow(path)}.`));
+        logger.writeln(logger.color.red(`Give full url to the proxy server or set ${logger.color.yellow('HTTPS_PROXY')} or ${logger.color.yellow('HTTP_PROXY')} environment variable.`));
       }
-      route.targetHost = logon.host;
+      proxyOptions.useCorporateProxy = proxyServer;
     }
-    if (!route.targetHost) {
-      logger.writeln(logger.color.red(`Error: No target host for ${logger.color.yellow(route.path)}`));
-      return null;
-    }
-    return {
-      targetSystem: route.targetSystem,
-      targetHost: route.targetHost,
-      path: route.path,
-      https: route.https || false
-    };
+    cfg.proxy[path] = proxyOptions;
   });
-  cfg.destinations = destinations.filter(destination => destination !== null);
 
   // check if we can use webapp folder
   if (cfg.sourceFolder === '') {
@@ -242,6 +256,34 @@ function readConfig() {
 
 function isSameDirectory(dir1, dir2) {
   return _path2.default.relative(dir1, dir2) === '';
+}
+
+function expandSystemUrl(url_, info = {}) {
+  let parts = {};
+  let system;
+  if (url_.match(/^[a-z0-9]{1,3}$/gi)) {
+    system = url_;
+  } else {
+    parts = _url2.default.parse(url_);
+    if (['sap:', 'sap-system:'].includes(parts.protocol)) {
+      system = parts.hostname.toUpperCase();
+    }
+  }
+
+  if (system) {
+    info.system = system;
+    const logon = (0, _saplogonRead2.default)(system);
+    if (!logon) {
+      throw Error(`Unknown system ${system}.`);
+    }
+    return _url2.default.format({
+      protocol: 'http',
+      hostname: logon.server,
+      port: logon.port,
+      path: parts.path
+    });
+  }
+  return url_;
 }
 
 /**

@@ -2,7 +2,7 @@
 
 Develop UI5 applications using ES6 syntax and in any code editor you want. You can start from scratch or export a project from SAP Web IDE.
 
-![alt tag](https://bytebucket.org/zftrw-sap/ui5dev/raw/d70ee1c02e8749ec3c12f198c40b2d40db864718/screenshot.png?raw=true)
+![screenshot](https://bytebucket.org/zftrw-sap/ui5dev/raw/d70ee1c02e8749ec3c12f198c40b2d40db864718/screenshot.png?raw=true)
 
 
 ## Installation
@@ -49,11 +49,11 @@ Use the same app structere as SAP Web IDE does - just put your logic in `webapp`
 ```
 YourUI5App
 ├── webapp
-│   ├── Component.json
+│   ├── Component.js
 │   ├── index.html
 │   └── view
-│       ├── App.controller.json
-│       └── App.view.html
+│       ├── App.controller.js
+│       └── App.view.xml
 ├── neo-app.json
 └── ui5dev.config.json
 ```
@@ -66,12 +66,10 @@ No configuration file is needed to start webserver, but you can create `ui5dev.c
 `ui5dev.config.json`
 ```js
 {
-  "destinations": [
-    {
-      "path": "/sap/opu/odata",
-      "targetSystem": "BD0"
-    }    
-  ],
+  "proxy": {
+    "/resources": "https://sapui5.hana.ondemand.com/sdk",
+    "/sap/opu/odata": "sap://DB0"
+  },
   "deploy": {
     "system": "BD0",
     "package": "ZBD0TT001",
@@ -88,28 +86,65 @@ No configuration file is needed to start webserver, but you can create `ui5dev.c
 `ui5dev` also reads configuration from `neo-app.json` and `.project.json` files which are created by SAP Web IDE. You can use all of them in one project.
 
 
-## Destinations
+## Proxying API Requests in Development
 
-Destinations in `ui5dev` work very similar to that from SAP Web IDE - they allow you to proxy some urls to a different server. They are really usesful if you need to test OData services which are implemented in SAP Netweaver Geteway on a different machine. What is great here is that `ui5dev` can read access data to your SAP systems directly from SAP Logon. Just provide System ID of a system you want to connect as `targetSystem` and you are ready to go.
+To integrate your app with an API Backend use `proxy` section in the config file. Proxies in `ui5dev` work very similar to destinations known from SAP Web IDE - they allow you to proxy some urls to a different server. They are really usesful if you need to test REST or OData services which are implemented in SAP Netweaver Geteway on a different machine. What is great here is that `ui5dev` can read access data to your SAP systems directly from SAP Logon. Just provide System ID of a system you want to proxy request to as an url with `sap://` protocol. For example `sap://BD0` will route to BD0 system.
  
 `ui5dev.config.json`
 ```js
 {
-  "destinations": [
-    {
-      "path": "/sap/opu/odata",
-      "targetSystem": "BD0"  // SID of a system from SAP Logon
-    }    
-    {
-      "path": "/resources",
-      "targetHost": "sapui5.hana.ondemand.com",  // or: sapui5.hana.ondemand.com/1.28.9
-      "https": true
+  "proxy": {
+    "/resources": "https://sapui5.hana.ondemand.com/sdk",
+    "/test-resources": "https://sapui5.hana.ondemand.com/sdk",
+    "/sap/opu/odata": "sap://DB0"  // <-- this will route OData urls to DB0 system
+  },
+}
+```
+The above example will route to the latest version of the SAPUI5 library. If you need access specific version of the UI5 library, just replace `sdk` part with the required version number, e.g. `1.28.9`. 
+But even better approach is to use the UI5 library directly from your SAP system like this:
+```js
+{
+  "proxy": {
+    "/resources": "sap://BD0/sap/public/bc/ui5_ui5/1",  // <-- this will route to UI5 library installed on BD0 system
+    "*": "sap://BD0"  // <!-- all remaing routes should also go to BD0 system
+  }
+}
+```
+This will save you some headaches later;) And because this is very common scenario, there is a shorthand syntax provided to set up the same proxies as in the previous example:
+```js
+{
+  "proxy": "sap://BD0"
+}
+```
+You can even omit the protocol part `sap://` and just use `{ "proxy": "DB0" }`.
+
+Proxies accept same parameters. The default one is `target`, but you may specify any property [http-proxy-middleware](https://github.com/chimurai/http-proxy-middleware#options) supports, like for example `pathRewrite`.
+```js
+{
+  "proxy": {
+    "/api": {
+      "target": "https://externalapi.io/",
+      "pathRewrite": {
+        "^/api/old-path": "/api/new-path",  // rewrite path
+        "^/api/remove/path": "/path"        // remove base path
+      }
     }
-  ],
+  }
+}
+```
+One special option is `useCorporateProxy` which is for those unhappy developers who are behind a proxy server.
+```js
+{
+  "proxy": {
+    "/resources": {
+      "target": "https://sapui5.hana.ondemand.com/sdk",
+      "useCorporateProxy": "http://my.proxy.com:8080"  // <!-- this makes life a bit less frustrating
+    }
+  }
 }
 ```
 
-You can also use `routes` part from `neo-app.json`.
+`ui5dev` reads also `routes` section from `neo-app.json`. This is what you get from SAP Web IDE and will work out of the box in `ui5dev`:
 
 `neo-app.json`
 ```js
@@ -128,7 +163,7 @@ You can also use `routes` part from `neo-app.json`.
       "path": "/resources",
       "target": {
         "type": "service",
-        "serviceVersion": "1.32.18",  // add this for specific SAPUI5 version
+        "libraryVersion": "1.32.18",  // add this for a specific SAPUI5 version
         "name": "sapui5",
         "entryPath": "/resources"
       },
@@ -153,20 +188,18 @@ First create `deploy` section in `ui5dev.config.json` file, e.g.
 {
   "deploy": {
     "system": "BD0",
-    "client": 110,
+    "client": 110,  // optional
     "package": "ZBD0TT001",
     "name": "ZUI5APP",
-    "description": "My UI5 App"
+    "description": "UI5 App"  // optional
   }
 }
 ```
-Properties `client` and `description` are optional.
-
 Then run
 ```
 ui5dev deploy -t <transport> -u <user>
 ```
-You need to provide valid transport number and username and you will be promoted for user password.
+You need to provide valid transport number and username and you will be promoted for the user password.
 
 If you deploy to `$TMP` package, then transport number is not required.
 
