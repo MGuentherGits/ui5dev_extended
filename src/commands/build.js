@@ -39,9 +39,13 @@ function canCompile(filename) {
 }
 
 function handleFile(src, dest, filename) {
-  canCompile(filename)
-    ? compileFile(src, dest, filename)
-    : copyFile(src, dest, filename);
+  try {
+    canCompile(filename)
+      ? compileFile(src, dest, filename)
+      : copyFile(src, dest, filename);
+  } catch (error) {
+    logger.writeln(logger.color.red(error));
+  }
 }
 
 function compileFile(src, dest, filename) {
@@ -54,6 +58,8 @@ function compileFile(src, dest, filename) {
       format: 'cjs',
       dest: path.join(dest, filename)
     });
+  }).catch(function(reason) {
+    logger.writeln(logger.color.red(reason));
   });
 }
 

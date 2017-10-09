@@ -60,7 +60,11 @@ function canCompile(filename) {
 }
 
 function handleFile(src, dest, filename) {
-  canCompile(filename) ? compileFile(src, dest, filename) : copyFile(src, dest, filename);
+  try {
+    canCompile(filename) ? compileFile(src, dest, filename) : copyFile(src, dest, filename);
+  } catch (error) {
+    _utils.logger.writeln(_utils.logger.color.red(error));
+  }
 }
 
 function compileFile(src, dest, filename) {
@@ -73,6 +77,8 @@ function compileFile(src, dest, filename) {
       format: 'cjs',
       dest: _path2.default.join(dest, filename)
     });
+  }).catch(function (reason) {
+    _utils.logger.writeln(_utils.logger.color.red(reason));
   });
 }
 
