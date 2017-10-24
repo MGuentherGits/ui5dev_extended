@@ -70,7 +70,8 @@ class ServerError extends Error {
     try {
       this.message = response.xml.valueWithPath('message');
     } catch (error) {
-      this.message = response.body;
+      const header = response.req.method + ' ' + response.req.path;
+      this.message = header + '\n' + response.body;
     }
   }
 };
