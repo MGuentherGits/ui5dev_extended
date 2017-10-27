@@ -116,7 +116,12 @@ This will save you some headaches later;) And because this is very common scenar
   "proxy": "sap://BD0"
 }
 ```
-You can even omit the protocol part `sap://` and just use `{ "proxy": "DB0" }`.
+You can even omit the protocol part `sap://` and just use
+```js
+{
+  "proxy": "DB0"
+}
+```
 
 Proxies accept same parameters. The default one is `target`, but you may specify any property [http-proxy-middleware](https://github.com/chimurai/http-proxy-middleware#options) supports, like for example `pathRewrite`.
 ```js
@@ -188,7 +193,7 @@ First create `deploy` section in `ui5dev.config.json` file, e.g.
 {
   "deploy": {
     "system": "BD0",
-    "client": 110,  // optional
+    "client": "110",  // optional
     "package": "ZBD0TT001",
     "name": "ZUI5APP",
     "description": "UI5 App"  // optional
@@ -199,7 +204,7 @@ Then run
 ```
 ui5dev deploy -t <transport> -u <user>
 ```
-You need to provide valid transport number and username and you will be promoted for the user password.
+You need to provide valid transport number and username and you will be prompted for the password.
 
 If you deploy to `$TMP` package, then transport number is not required.
 

@@ -350,6 +350,11 @@ class ADT {
       headers: Object.assign({}, this._session, options.headers),
     }
 
+    if (this.options.client) {
+      options.queryString = options.queryString || {};
+      options.queryString['sap-client'] = this.options.client;
+    }
+
     if (options.queryString) {
       const params = [];
       Object.entries(options.queryString).forEach(([key, value]) => {
