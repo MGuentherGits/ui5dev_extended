@@ -1,6 +1,6 @@
 {
   "name": "ui5dev",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "UI5 apps development server",
   "homepage": "https://bitbucket.org/zftrw-sap/ui5dev",
   "repository": {
@@ -38,7 +38,7 @@
     "prompt": "^1.0.0",
     "rollup": "^0.41.6",
     "rollup-plugin-babel": "^2.7.1",
-    "saplogon-read": "^0.1.1",
+    "saplogon-read": "^0.1.2",
     "xmldoc": "^1.1.0"
   },
   "babel": {
@@ -47,7 +47,7 @@
         "env",
         {
           "targets": {
-            "node": 6.5
+            "node": "6.5"
           }
         }
       ]
