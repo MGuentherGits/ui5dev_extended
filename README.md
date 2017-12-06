@@ -192,7 +192,7 @@ First create `deploy` section in `ui5dev.config.json` file, e.g.
 ```js
 {
   "deploy": {
-    "system": "BD0",
+    "system": "BD0",  // system name or system url with protocol and port number
     "client": "110",  // optional
     "package": "ZBD0TT001",
     "name": "ZUI5APP",

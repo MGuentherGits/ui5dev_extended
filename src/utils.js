@@ -231,7 +231,7 @@ export function isSameDirectory(dir1, dir2) {
 }
 
 
-function expandSystemUrl(url_, info = {}) {
+export function expandSystemUrl(url_, info = {}) {
   let parts = {};
   let system;
   if (url_.match(/^[a-z0-9]{1,3}$/gi)) {

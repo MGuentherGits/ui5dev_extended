@@ -6,15 +6,12 @@ Object.defineProperty(exports, "__esModule", {
 
 let deploy = (() => {
   var _ref = _asyncToGenerator(function* (dist, options) {
-    const logon = (0, _saplogonRead2.default)(options.system);
-    if (!logon) {
-      log(`Deployment system ${options.system} not found.`);
-      return;
-    }
-
+    const info = {};
+    const systemUrl = (0, _utils.expandSystemUrl)(options.system, info);
+    const target = _url2.default.parse(systemUrl);
     const adtOptions = {
-      server: logon.server,
-      port: logon.port,
+      server: target.hostname,
+      port: target.port,
       client: options.client,
       auth: { user: options.user, password: options.password },
       transport: options.transport,
@@ -23,7 +20,11 @@ let deploy = (() => {
       bspContainerDescription: options.descripton || options.name
     };
 
-    log(`Deploying applicaton to ${_utils.logger.color.cyan(options.system)}.`);
+    if (info.system) {
+      log(`Deploying applicaton to ${_utils.logger.color.cyan(systemUrl)} (${_utils.logger.color.yellow(info.system)}).`);
+    } else {
+      log(`Deploying applicaton to ${_utils.logger.color.cyan(systemUrl)}.`);
+    }
     log(`BSP Container: ${_utils.logger.color.yellow(options.name)}`);
     log(`Package: ${_utils.logger.color.yellow(options.package)}`);
     if (options.transport) {
@@ -105,6 +106,10 @@ let deploy = (() => {
 var _path = require('path');
 
 var _path2 = _interopRequireDefault(_path);
+
+var _url = require('url');
+
+var _url2 = _interopRequireDefault(_url);
 
 var _saplogonRead = require('saplogon-read');
 

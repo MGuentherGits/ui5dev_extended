@@ -10,6 +10,7 @@ exports.getAvailableIPAddresses = getAvailableIPAddresses;
 exports.splitHost = splitHost;
 exports.readConfig = readConfig;
 exports.isSameDirectory = isSameDirectory;
+exports.expandSystemUrl = expandSystemUrl;
 
 var _path = require('path');
 

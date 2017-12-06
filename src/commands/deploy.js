@@ -1,8 +1,9 @@
 import path from 'path';
+import url from 'url';
 import saplogon from 'saplogon-read';
 import ADT, { SyncMode, EntryType, ServerError } from '../adt';
 import { walkSync } from './build';
-import { logger } from '../utils';
+import { logger, expandSystemUrl } from '../utils';
 
 
 function logAsyncSectionBegin(...args) {
@@ -19,15 +20,12 @@ function log(...args) {
 
 
 async function deploy(dist, options) {
-  const logon = saplogon(options.system);  
-  if (!logon) {
-    log(`Deployment system ${options.system} not found.`);
-    return;
-  }
-  
+  const info = {};
+  const systemUrl = expandSystemUrl(options.system, info);
+  const target = url.parse(systemUrl);
   const adtOptions = {
-    server: logon.server,
-    port: logon.port,
+    server: target.hostname,
+    port: target.port,
     client: options.client,
     auth: { user: options.user, password: options.password, },
     transport: options.transport,
@@ -36,7 +34,11 @@ async function deploy(dist, options) {
     bspContainerDescription: options.descripton || options.name,
   }
 
-  log(`Deploying applicaton to ${logger.color.cyan(options.system)}.`);
+  if (info.system) {
+    log(`Deploying applicaton to ${logger.color.cyan(systemUrl)} (${logger.color.yellow(info.system)}).`);
+  } else {
+    log(`Deploying applicaton to ${logger.color.cyan(systemUrl)}.`);
+  }
   log(`BSP Container: ${logger.color.yellow(options.name)}`);
   log(`Package: ${logger.color.yellow(options.package)}`);
   if (options.transport) {
