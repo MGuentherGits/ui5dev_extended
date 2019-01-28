@@ -42,6 +42,12 @@ function serve(dest, port, proxies) {
     if (options.useCorporateProxy) {
       options.agent = new _httpsProxyAgent2.default(options.useCorporateProxy);
     }
+    options.onProxyRes = function (proxyResponse) {
+      if (proxyResponse.headers['set-cookie']) {
+        const cookies = proxyResponse.headers['set-cookie'].map(cookie => cookie.replace(/; secure/gi, ''));
+        proxyResponse.headers['set-cookie'] = cookies;
+      }
+    };
     app.use(path, (0, _httpProxyMiddleware2.default)(options));
   });
 

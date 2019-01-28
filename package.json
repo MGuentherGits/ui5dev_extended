@@ -1,5 +1,5 @@
 {
-  "name": "ui5dev",
+  "name": "ui5dev_extended",
   "version": "0.1.7",
   "description": "UI5 apps development server",
   "homepage": "https://bitbucket.org/zftrw-sap/ui5dev",
@@ -13,7 +13,7 @@
     "sap"
   ],
   "bin": {
-    "ui5dev": "dist/bin/ui5dev.js"
+    "ui5dev_extended": "dist/bin/ui5dev_extended.js"
   },
   "scripts": {
     "build": "babel src -d dist",
